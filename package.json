@@ -12,6 +12,7 @@
     "lint:styles": "stylelint --cache \"assets/scss/**/*.{css,sass,scss}\"",
     "lint:markdown": "markdownlint-cli2 \"*.md\" \"content/**/*.md\"",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "exec-bin node_modules/.bin/hugo/hugo mod get -u",
     "build": "exec-bin node_modules/.bin/hugo/hugo --minify",
     "preview": "http-server --gzip --brotli --ext=html --cors",
     "clean": "npm run clean:build && npm run clean:lint && npm run clean:install",
@@ -29,12 +30,10 @@
   "dependencies": {
     "gethyas": "^2.2.1",
     "@hyas/bootstrap": "^1.0.3"
-
   },
   "devDependencies": {
     "prettier": "^3.0.3",
     "prettier-plugin-go-template": "^0.0.15",
     "decap-server": "^3.0.1"
-
   }
 }
