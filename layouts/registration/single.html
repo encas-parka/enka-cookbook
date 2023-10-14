@@ -9,11 +9,16 @@
               <div class="card-body">
                 <p class="card-text small">Les comptes authentifiés peuvent directement publier ou modifier des recettes, créer des évenements, etc, sans modération préalable.</p>
                
-                <form name="registration" class="contact-form width-normal" method="POST" data-netlify="true"  action="/">
+                <form name="registration" class="contact-form width-normal" method="POST" data-netlify="true"  action="/" netlify-honeypot="spm-field"></form>>
                   <input type="hidden" name="form-name" value="registration" />
-                  <div class="mb-3"><input type="email" class="form-control" id="email-forms" name="email" placeholder="name@example.com"></div>
+                  <p class="hidden">
+                    <label><input name="spm-field" /></label>
+                  </p>
                   <div class="mb-3">
-                    <textarea class="form-control" id="presentation-forms" name="description" placeholder="Dites-nous vite fait qui vous êtes (si c'est pour une cantine auto-géré ou un autre usage, si on se connait, etc.)"
+                    <input type="email" class="form-control" id="email-forms" name="email-registration" placeholder="name@example.com">
+                  </div>
+                  <div class="mb-3">
+                    <textarea class="form-control" id="decription-forms" name="description-registration" placeholder="Dites-nous vite fait qui vous êtes (si c'est pour une cantine auto-géré ou un autre usage, si on se connait, etc.)"
                     rows="8"></textarea>
                   </div>
                   <div class="form-group ">
