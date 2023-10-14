@@ -95,7 +95,7 @@
         </form>
       </div>
       <div class="row">
-        <div class="col-lg-6">
+        <div class="col">
           {{- if eq .Params.check "Oui" -}}
             <span>Cette recette a été testée pour {{.Params.plate}} couverts </span>
             {{- if ne .Params.checkfor "" -}}
@@ -110,41 +110,37 @@
             </div>
           {{- end -}}
         </div>
-              
-        <div class="col-lg-6">
+     
+        {{- with (or ( $alergeneRecette ) ( $glutenRecette) ( $lactoseRecette) ( $noveganRecette)) -}}
+        <div class="col">
           <div class="card p-2 my-3 fs-6 border-danger shadow">
             <div class="card-body">
-        {{- if (or (ne $alergeneRecette  "") (ne $glutenRecette "") (ne $lactoseRecette "") (ne $noveganRecette "")) -}}
           {{- with $alergeneRecette -}}
           <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "rem" 2) }} Ingrédients alergenes :
             {{ delimit $alergeneRecette ", "}}
-            {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "rem" 2) }} 
           </div>
           {{- end -}}
           {{- with $glutenRecette -}}
           <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "rem" 2) }} 
             Ingrédients contenant du gluten :
             {{ delimit $glutenRecette ", "}}
-            {{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "rem" 2) }}
           </div>
           {{- end -}}
           {{- with $lactoseRecette -}}
           <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "rem" 2) }}
             Ingrédients contenant du lactose :
             {{ delimit $lactoseRecette ", "}}
-            {{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "rem" 2) }}
           </div>
           {{- end -}}
           {{- with $noveganRecette -}}
           <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "rem" 2) }}            Ingrédients non-vegan :
             {{ delimit $noveganRecette ", "}}
-            {{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "rem" 2) }}  
           </div>
           {{- end -}}
-          {{- end -}}
-            </div>
+        </div>
           </div>
         </div>
+        {{- end -}}
       </div>
     <hr>
 
@@ -154,9 +150,9 @@
   <div class="col-md-4 print-col-30-100">
     <h4>Ingredients </h4>
 
-      <div class="card my-4 p-2 shadow">
+      {{/*  <div class="card my-4 p-2 shadow">
         <span class="small">{{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "rem" 1) }} → Alergènes </span>
-      </div>
+      </div>  */}}
 
       {{- range $key, $value := .Params.ingredients  -}}
         {{- with . -}}
