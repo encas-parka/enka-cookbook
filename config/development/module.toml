@@ -36,4 +36,8 @@
   source = "node_modules/@hyas/bootstrap/layouts"
   target = "layouts"
 
+# [[imports]]
+#   path = "../../cookbook-content"
+
+
 

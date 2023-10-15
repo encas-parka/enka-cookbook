@@ -35,6 +35,5 @@
   source = "node_modules/@hyas/bootstrap/layouts"
   target = "layouts"
 
-[[imports]]
-  path = "github.com/encas-parka/cookbook-content"
+
 
