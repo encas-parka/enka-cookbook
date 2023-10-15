@@ -36,9 +36,9 @@
   source = "node_modules/@hyas/bootstrap/layouts"
   target = "layouts"
 
-# Test for content
-[[imports]]
-  path = "../../cookbook-content"
+# FOR DEV
+# [[imports]]
+#   path = "../../cookbook-content"
 
 [[imports.mounts]]
   source = "content"
