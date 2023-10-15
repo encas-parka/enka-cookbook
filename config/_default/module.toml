@@ -38,6 +38,3 @@
 [[imports]]
   path = "github.com/encas-parka/cookbook-content"
 
-[[imports.mounts]]
-  source = "content"
-  target = "content"

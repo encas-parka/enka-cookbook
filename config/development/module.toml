@@ -37,8 +37,3 @@
   target = "layouts"
 
 
-
-[[imports.mounts]]
-  source = "content"
-  target = "content"
-
