@@ -4,7 +4,7 @@
 
 <header class="navbar navbar-dark bg-dark navbar-expand-lg no-print p-2">
     <div class="container-fluid">
-      <a class="navbar-brand monospace" href="{{ "/" | absURL }}">{{ .Site.Params.Title }}</a>
+      <a class="navbar-brand monospace" href="{{ "/" | absURL }}"> <img src="/favicon-96x96.png" alt="logo" width="42" class="d-inline-block align-text-center"> {{ .Site.Params.Title }}</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -69,13 +69,10 @@
               data-bs-toggle="modal" data-bs-target="#searchBackdrop"> 
               {{ partial "inline-svg" (dict "src" "fonticons/search.svg" "display" "block") }}
             </button>
-             <a href="/registration">
-               <button
-                type="button"
-                class="btn btn-outline-primary btn-sm"></button>
-                {{ partial "inline-svg" (dict "src" "fonticons/person-circle.svg" "display" "inline") }} Connexion
-                           </button>
-             </a>
+               <a href="/registration"
+                class="btn btn-outline-primary btn-sm"
+                style="display: flex; align-items: center;">{{ partial "inline-svg" (dict "src" "fonticons/person-circle.svg" "fs" 4 ) }}<span class="mx-2">Connexion</span>
+              </a>
            </ul>
         
       </div>

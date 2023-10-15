@@ -1,13 +1,13 @@
 # Meta Data for SEO
 
 ## Homepage
-title = "Encas-Parka Cookbook"
+title = "Enka-Cookbook"
 titleSeparator = "-"
 titleAddition = "Des recettes pour pleins"
-description = ""
+description = "Site collaboratif de partage de recettes et d'organisation d'évènement pour les cantines autogérées."
 
 ## Open Graph
-images = ["hyas.png"]
+images = ["enka-cookbook.png"]
 ogLocale = "fr"
 titleHome = "Encas-Parka Cookbook"
 
@@ -18,16 +18,16 @@ titleHome = "Encas-Parka Cookbook"
 ## JSON-LD
 # schemaType = "Person"
 schemaType = "Organization"
-schemaName = "Encas-Parka Cookbook"
+schemaName = "Enka Cookbook"
 schemaAuthor = "encas-parka"
 # schemaAuthorTwitter = "https://twitter.com/henkverlinde"
 # schemaAuthorLinkedIn = "https://www.linkedin.com/in/henkverlinde/"
-# schemaAuthorGitHub = "https://github.com/h-enk"
+schemaAuthorGitHub = "https://github.com/encas-parka"
 schemaLocale = "fr-FR"
-schemaLogo = "logo-hyas.png"
+schemaLogo = "logo-enka.png"
 schemaLogoWidth = 512
 schemaLogoHeight = 512
-schemaImage = "hyas.png"
+schemaImage = "enka-cookbook.png"
 schemaImageWidth = 1280
 schemaImageHeight = 640
 schemaTwitter = ""

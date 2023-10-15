@@ -19,7 +19,10 @@ publish_mode: editorial_workflow
 
 
 media_folder: "static/images"
-public_folder: "static/images"
+public_folder: "/images"
+site_url: https://enka-parka.netlify.app/
+display_url: https://enka-parka.netlify.app/
+
 slug:
   clean_accents: true
   sanitize_replacement: "-"
