@@ -38,7 +38,7 @@
 
 # Test for content
 [[imports]]
-  path = "github.com/encas-parka/cookbook-content"
+  path = "../../cookbook-content"
 
 [[imports.mounts]]
   source = "content"

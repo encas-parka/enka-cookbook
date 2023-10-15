@@ -1,3 +1,0 @@
-[module]
-
-replacements = "github.com/encas-parka/cookbook-content -> ../../cookbook-content"
