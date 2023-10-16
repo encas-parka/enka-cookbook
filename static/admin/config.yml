@@ -1,8 +1,8 @@
 backend:  
 ## prod →
   name: github
-  repo: encas-parka/cookbook-content
-  branch: main
+  repo: encas-parka/enka-cookbook
+  branch: production
   # branch: master # Branch to update (optional; defaults to master)
   open_authoring: true  #Permettre un PR sur github sans l'acces aux dépot
 
@@ -20,8 +20,8 @@ publish_mode: editorial_workflow
 
 media_folder: "static/images"
 public_folder: "/images"
-site_url: https://enka-parka.netlify.app/
-display_url: https://enka-parka.netlify.app/
+site_url: https://enka-cookbook.netlify.app/
+display_url: https://enka-cookbook.netlify.app/
 
 slug:
   clean_accents: true
@@ -103,7 +103,7 @@ collections:
         ## Description ##
 
       - {label : 'Régimes', name: 'regime',widget: "select", label_singular: 'Régime', required: false, multiple: true, options:  ['vegetarien', 'vegan', 'sans-gluten', 'sans-lactose']}
-      - {label: 'Spécialité (région)', name: 'spécialité', widget: 'string', required: false}
+      - {label: 'Spécialité (région)', name: 'region', widget: 'string', required: false}
       - label: 'Saison'
         name: 'saison'
         widget: 'select'
