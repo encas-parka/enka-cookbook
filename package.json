@@ -1,7 +1,7 @@
 {
-  "name": "hyas",
-  "version": "0.0.0",
-  "author": "Hyas",
+  "name": "enka-cookbook",
+  "version": "0.0.1",
+  "author": "QaldeK",
   "license": "MIT",
   "scripts": {
     "dev": "exec-bin node_modules/.bin/hugo/hugo server --bind=0.0.0.0 --disableFastRender --baseURL=http://localhost --noHTTPCache",
@@ -12,7 +12,6 @@
     "lint:styles": "stylelint --cache \"assets/scss/**/*.{css,sass,scss}\"",
     "lint:markdown": "markdownlint-cli2 \"*.md\" \"content/**/*.md\"",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prebuild": "exec-bin node_modules/.bin/hugo/hugo mod get -u",
     "build": "exec-bin node_modules/.bin/hugo/hugo --minify",
     "preview": "http-server --gzip --brotli --ext=html --cors",
     "clean": "npm run clean:build && npm run clean:lint && npm run clean:install",
