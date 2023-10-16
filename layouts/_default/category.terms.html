@@ -2,7 +2,9 @@
 
 <div class="container" role="main">
     <div class="row">
-  <h5>/layout/_default/category.terms</h5>
+      {{ if not hugo.IsProduction }}
+      <h5>/layout/_default/category.terms</h5>
+      {{ end }}
 
     <div class="h2">{{.Title}}</div>
     <h3>1</h3>
