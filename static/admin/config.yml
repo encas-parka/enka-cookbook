@@ -103,7 +103,7 @@ collections:
         ## Description ##
 
       - {label : 'Régimes', name: 'regime',widget: "select", label_singular: 'Régime', required: false, multiple: true, options:  ['vegetarien', 'vegan', 'sans-gluten', 'sans-lactose']}
-      - {label: 'Spécialité (région)', name: 'spécialité', widget: 'string', required: false}
+      - {label: 'Spécialité (région)', name: 'region', widget: 'string', required: false}
       - label: 'Saison'
         name: 'saison'
         widget: 'select'

@@ -8,7 +8,7 @@ type: plat
 auteur: Sylvain
 regime:
   - sans-lactose
-spécialité: Algérie
+region: Algérie
 cuisson: Oui
 temperature: Chaud
 plate: 170

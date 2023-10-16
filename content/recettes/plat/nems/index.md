@@ -12,7 +12,7 @@ regime:
   - vegan
   - sans-gluten
   - sans-lactose
-spécialité: Asie
+region: Asie
 cuisson: Oui
 temperature: Froid
 plate: 150

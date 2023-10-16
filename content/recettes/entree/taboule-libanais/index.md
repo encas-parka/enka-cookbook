@@ -5,7 +5,7 @@ regime:
   - vegetarien
   - vegan
   - sans-lactose
-spécialité: Liban
+region: Liban
 temperature: Froid
 ingredients:
   sucres:

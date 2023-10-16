@@ -1,5 +1,5 @@
 ---
-spécialité: Asie
+region: Asie
 draft: false
 title: Nems
 img: https://www.cookomix.com/wp-content/uploads/2017/02/nems-au-poulet-thermomix-800x600.jpg
