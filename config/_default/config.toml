@@ -63,6 +63,8 @@ notAlternative = true
 [taxonomies]
   category = "categories"
   regime = "regime" # Végé, sans-glut...
+  auteur = "auteur"
+  region= "region"
 
 [permalinks]
   blog = "/:title/"
