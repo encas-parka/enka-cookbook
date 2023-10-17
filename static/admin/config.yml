@@ -21,7 +21,7 @@ publish_mode: editorial_workflow
 media_folder: "static/images"
 public_folder: "/images"
 site_url: https://enka-cookbook.netlify.app/
-display_url: https://enka-cookbook.netlify.app/
+
 
 slug:
   clean_accents: true
