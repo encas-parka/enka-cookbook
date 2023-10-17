@@ -16,7 +16,7 @@
   ignore = "exit 0"
 
 [context.branch-deploy]
-  command = "npm run build -- -b $DEPLOY_PRIME_URL"
+  command = "npm run build -- -b $DEPLOY_PRIME_URL"  #→ pas de changement: accept on netlify cancelled
 
 [context.next]
   command = "npm run build"
