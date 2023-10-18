@@ -4,8 +4,8 @@ on:
     branches:
       - 'content_cms'
     paths:
-      - '/content/**'
-      - '/data/**'
+      - '/content/**/*'
+      - '/data/**/*'
 jobs:
   build:
     runs-on: ubuntu-latest
