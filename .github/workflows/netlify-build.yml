@@ -3,16 +3,15 @@ on:
   push:
     branches:
       - 'content-cms'
-
+    paths: 
+      - 'content/**'
+      - 'data/**'
+      - 'static/images/**'
 jobs:
-  sync-branch:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Merge content_cms -> production
-        uses: devmasx/merge-branch@master
-        with:
-          type: now
-          from_branch: content-cms
-          target_branch: production
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Trigger Netlify Build Hook
+        run: curl -s -X POST -d {} "https://api.netlify.com/build_hooks/${TOKEN}"
+        env:
+          TOKEN: ${{ secrets.NETLIFY_DEPLOY_CONTENT }}
