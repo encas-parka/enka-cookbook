@@ -3,18 +3,17 @@ on:
   push:
     branches:
       - 'content_cms'
-    paths: 
-      - 'content/**'
-      - 'data/**'
-      - 'static/images/**'
-  
-jobs:
-  merge:
-    runs-on: ubuntu-latest
 
+jobs:
+  sync-branch:
+    runs-on: ubuntu-latest
     steps:
-      - name: Merge content_cms into production
-        run: |
-          git checkout production
-          git merge content_cms
-          git push origin production
+      - uses: actions/checkout@master
+
+      - name: Merge content_cms -> production
+        uses: devmasx/merge-branch@master
+        with:
+          type: now
+          from_branch: content_cms
+          target_branch: production
+          github_token: ${{ secrets.GITHUB_TOKEN }}
