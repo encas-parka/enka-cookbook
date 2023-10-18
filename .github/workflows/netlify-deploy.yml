@@ -1,0 +1,35 @@
+name: Netlify Deploy Site
+on:
+  push:
+    branches:
+      - 'content-cms'
+    paths: 
+      - 'content/**'
+      - 'data/**'
+      - 'static/images/**'
+permissions: 
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git User
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "<EMAIL>"  
+
+      - name: Update production from content-cms
+        run: |
+          git checkout content-cms
+          git fetch origin
+          git checkout production
+          git pull
+          git merge origin/content-cms
+          git push origin production
+
