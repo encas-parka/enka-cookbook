@@ -2,7 +2,7 @@ name: Netlify Deploy
 on:
   push:
     branches:
-      - 'content_cms'
+      - 'content-cms'
 
 jobs:
   sync-branch:
@@ -12,7 +12,7 @@ jobs:
         uses: devmasx/merge-branch@master
         with:
           type: now
-          from_branch: content_cms
+          from_branch: content-cms
           target_branch: production
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
