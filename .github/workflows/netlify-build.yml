@@ -16,5 +16,4 @@ jobs:
           git checkout production
           git merge content_cms --no-ff --no-commit
           git commit -m "Merge content_cms into production"
-          git push origin production
-
+          git push origin production 
