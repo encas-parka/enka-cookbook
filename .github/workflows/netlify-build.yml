@@ -9,9 +9,8 @@ on:
         - 'static/images/**'
   
 jobs:
-
 	merge:
-    runs-on: ubuntu-latest
+    	runs-on: ubuntu-latest
 
     steps:
       - name: Checkout production
