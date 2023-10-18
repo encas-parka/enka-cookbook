@@ -3,14 +3,14 @@ on:
   push:
     branches:
       - 'content_cms'
-	paths:
-		- 'content/**'
-  		- 'data/**'
-        - 'static/images/**'
+  paths: 
+    - 'content/**'
+    - 'data/**'
+    - 'static/images/**'
   
 jobs:
-	merge:
-    	runs-on: ubuntu-latest
+  merge:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout production
@@ -20,6 +20,5 @@ jobs:
 
       - name: Merge content_cms into production
         run: |
-          git merge content_cms --no-ff --no-commit
-          git commit -m "Merge content_cms into production"
+          git merge content_cms
           git push origin production
