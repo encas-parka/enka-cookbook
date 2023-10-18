@@ -14,17 +14,8 @@ jobs:
 
     steps:
 
-      - name: Checkout production
-        uses: actions/checkout@v4
-        with:
-          ref: content_cms  
-          
-      - name: Checkout production
-        uses: actions/checkout@v4
-        with:
-          ref: production
-
       - name: Merge content_cms into production
         run: |
+          git checkout production
           git merge content_cms
           git push origin production
