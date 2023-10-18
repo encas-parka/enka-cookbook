@@ -7,13 +7,27 @@ on:
       - 'content/**/*'
       - 'data/**/*'
 jobs:
-  build:
+name: Netlify Deploy
+on:
+  push:
+    branches:
+      - 'content_cms'
+    paths:
+			- '/content/**'
+			- '/data/**'
+jobs:
+
+	merge:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Checkout production
+        uses: actions/checkout@v4
+        with:
+          ref: production
+
       - name: Merge content_cms into production
         run: |
-          git fetch origin content_cms:content_cms 
-          git checkout production
           git merge content_cms --no-ff --no-commit
           git commit -m "Merge content_cms into production"
-          git push origin production 
+          git push origin production
