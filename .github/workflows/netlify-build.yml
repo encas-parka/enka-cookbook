@@ -3,10 +3,10 @@ on:
   push:
     branches:
       - 'content_cms'
-  paths: 
-    - 'content/**'
-    - 'data/**'
-    - 'static/images/**'
+    paths: 
+      - 'content/**'
+      - 'data/**'
+      - 'static/images/**'
   
 jobs:
   merge:
