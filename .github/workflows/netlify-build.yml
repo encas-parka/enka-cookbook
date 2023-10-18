@@ -13,15 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      - name: Checkout production
+        uses: actions/checkout@v4
+        with:
+          ref: content_cms  
+          
       - name: Checkout production
         uses: actions/checkout@v4
         with:
           ref: production
-     
-      - name: Checkout production
-        uses: actions/checkout@v4
-        with:
-          ref: content_cms
 
       - name: Merge content_cms into production
         run: |
