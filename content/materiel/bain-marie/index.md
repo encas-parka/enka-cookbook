@@ -1,4 +1,4 @@
 ---
-title: Bain Marie TEST
+title: Bain Marie
 sitemap_exclude: true
 ---
