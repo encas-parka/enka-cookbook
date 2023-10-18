@@ -3,18 +3,11 @@ on:
   push:
     branches:
       - 'content_cms'
-    paths:
-      - 'content/**/*'
-      - 'data/**/*'
-jobs:
-name: Netlify Deploy
-on:
-  push:
-    branches:
-      - 'content_cms'
-    paths:
-			- '/content/**'
-			- '/data/**'
+	paths:
+		- 'content/**'
+  		- 'data/**'
+        - 'static/images/**'
+  
 jobs:
 
 	merge:
