@@ -1,0 +1,20 @@
+name: Netlify Deploy Cron
+on:
+  schedule:
+    - cron: "0/5 * * * *" 
+
+  
+jobs:
+  mon_job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy PR
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ github.event.pull_request.base.ref }}" == "editorial" ]]; then
+            echo "Un PR a été créé sur editorial. Exécuter le job..."
+            # Ajoutez ici les étapes de votre job
+          else
+            echo "Aucun PR sur editorial. Le job ne sera pas exécuté."
+          fi
+   
