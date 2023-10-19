@@ -11,6 +11,7 @@
 
 [context.production]
   command = "npm run build"
+  ignore = "/*\n!/content/\n!/data/"
 
 [context.deploy-preview]
   command = "npm run build -- -b $DEPLOY_PRIME_URL"
