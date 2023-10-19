@@ -1,0 +1,23 @@
+name: Netlify Deploy Cron
+on:
+  # schedule:
+  #   - cron: 00 12,00 * * *
+  pull_request:
+    branches:
+      - content-cms
+
+  
+jobs:
+  mon_job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy PR
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ github.event.pull_request.base.ref }}" == "content-cms" ]]; then
+            echo "Un PR a été créé sur content-cms. Exécuter le job..."
+            # Ajoutez ici les étapes de votre job
+          else
+            echo "Aucun PR sur content-cms. Le job ne sera pas exécuté."
+          fi
+   
