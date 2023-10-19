@@ -507,13 +507,13 @@ collections:
         collapsed: false
         required: false
         add_to_top: true
-        hint: "Signaler ici les recettes alternative à celle-ci pour des régimes particuliers (végan, sans glutten, etc.); ou pour un nombres de couverts significativement différents (nécessitant des proportions d'ingrédients différents)"
+        hint: "Si elles existent, signalez ici les recettes alternatives à celle-ci pour des régimes particuliers (végan, sans glutten, etc.); ou pour un nombres de couverts significativement différents (nécessitant des proportions d'ingrédients différents)"
         fields:
           - {
               label: "recettes",
               name: "recetteAlt",
               widget: "relation",
-              collection: "Recettes",
+              collection: "recettes",
               search_fields: ["title"],
               value_field: "title",
               display_field: "title",
