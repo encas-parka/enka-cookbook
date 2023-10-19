@@ -10,7 +10,7 @@
 
 [context.production]
   command = "npm run build"
-  ignore = "/*\n!/content/\n!/data/"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF content data static/images"
 
 [context.deploy-preview]
   command = "npm run build -- -b $DEPLOY_PRIME_URL"
