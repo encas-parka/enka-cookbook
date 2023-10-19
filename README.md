@@ -9,8 +9,7 @@
 </h1>
 
 <h3 align="center">
-  Modern Hugo starter TEST Again 2 Main
-</h3>
+...</h3>
 
 <p align="center">
   Hyas is a Hugo starter helping you build modern websites that are secure, fast, and SEO-ready — by default.
