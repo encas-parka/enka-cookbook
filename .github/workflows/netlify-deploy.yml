@@ -1,35 +1,17 @@
-name: Netlify Deploy Site
+name: Netlify Deploy Editorial
 on:
   push:
     branches:
-      - 'editorial'
+      - 'content-cms'
     paths: 
       - 'content/**'
       - 'data/**'
       - 'static/images/**'
-permissions: 
-  contents: write
-
 jobs:
-  sync:
-    runs-on: ubuntu-latest 
+  build:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Git User
-        run: |
-          git config user.name "GitHub Action"
-          git config user.email "<EMAIL>"  
-
-      - name: Update production from content-cms
-        run: |
-          git checkout content-cms
-          git fetch origin
-          git checkout production
-          git pull
-          git merge origin/content-cms
-          git push origin production
-
+      - name: Trigger Netlify Build Hook
+        run: curl -s -X POST -d {} "https://api.netlify.com/build_hooks/${TOKEN}"
+        env:
+          TOKEN: ${{ secrets.NETLIFY_DEPLOY_EDITORIAL }}
