@@ -1,7 +1,7 @@
 [build]
   publish = "public"
   functions = "functions"
-  ignore = "/*\n!/content/\n!/data/"
+
 
 [build.environment]
   NODE_VERSION = "18.16.1"
@@ -10,6 +10,7 @@
 
 [context.production]
   command = "npm run build"
+  ignore = "/*\n!/content/\n!/data/"
 
 [context.deploy-preview]
   command = "npm run build -- -b $DEPLOY_PRIME_URL"
