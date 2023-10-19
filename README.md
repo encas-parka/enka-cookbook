@@ -9,7 +9,7 @@
 </h1>
 
 <h3 align="center">
-  Modern Hugo starter
+  Modern Hugo starter TEST
 </h3>
 
 <p align="center">
