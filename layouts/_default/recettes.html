@@ -55,15 +55,15 @@
 {{- if .Params.auteur -}}
 <span class="text-muted fs-5">une recette de {{ .Params.auteur }}</span>
 {{- end -}}
-<div class="text-muted fs-6"> publiée le {{ dateFormat "02 January 2006" (.Params.publishDate)  }}</div>
+<div class="text-muted fs-6 no-print"> publiée le {{ dateFormat "02 January 2006" (.Params.publishDate)  }}</div>
 
 
 {{/* lien vers le CMS de la page */}}
 {{ $linkCMSPage := (path.Join "/admin/#/collections/recettes/entries/" (.Type) (.File.ContentBaseName)) }}
 <div class="text-end mx-2 px-2 no-print"><a target="_blank" rel="noopener noreferrer" href="{{$linkCMSPage}}/index" >Modifier</a></div>
 
-<div class="printonly fs-4 text-end fw-bolder">
-  Quantité pour <span id="quantityDefined"> {{.Params.plate}}</span> assiettes
+<div class="printonly fs-6 text-end fw-bolder">
+  Quantité pour <span id="quantityDefined"> {{.Params.plate}}</span> couvert
 </div>
 
 <div class="row">
@@ -94,46 +94,48 @@
             </div>
         </form>
       </div>
-      <div class="row">
-        <div class="col">
+      <div class="row ">
+        <div class="col-12 col-md-6 col-lg-6 col-xl-6">
           {{- if eq .Params.check "Oui" -}}
             <span>Cette recette a été testée pour {{.Params.plate}} couverts </span>
             {{- if ne .Params.checkfor "" -}}
               <span>et pour {{.Params.checkfor}} couverts</span>
             {{- end -}}
           {{- else -}}
-            <div class="card p-4 my-3 fs-6 border-danger shadow">
-              <span class="card-text">Les auteur•ices de la recette ne l'ont <strong>pas testé</strong> pour le nombre de couverts indiqués par défaut ({{.Params.plate}}).<span class="no-print"> Merci de <a href="{{$linkCMSPage}}/index">modifier</a> la recette pour indiquer si vous l'avez testé avec succès, ou pour corriger les quantités d'ingrédients indiquées. A défaut, vous pouvez laisser vos commentaires dans le formulaire en bas de page</span></span>
-              {{- if .Params.checkfor -}}
-                <span class="card-text">Elle à été pour validée {{.checkfor}} personnes.</span>
-              {{- end -}}
+            <div class="card border-danger shadow">
+              <div class="card-body small">
+                <span class="card-text">Les auteur•ices de la recette ne l'ont <strong>pas testé</strong> pour le nombre de couverts indiqués par défaut ({{.Params.plate}}).<span class="no-print"> Merci de <a href="{{$linkCMSPage}}/index">modifier</a> la recette pour indiquer si vous l'avez testé avec succès, ou pour corriger les quantités d'ingrédients indiquées. A défaut, vous pouvez laisser vos commentaires dans le formulaire en bas de page</span></span>
+                {{- if .Params.checkfor -}}
+                  <span class="card-text ">Elle à été pour validée {{.checkfor}} personnes.</span>
+                {{- end -}}
+              </div>
             </div>
           {{- end -}}
         </div>
      
         {{- with (or ( $alergeneRecette ) ( $glutenRecette) ( $lactoseRecette) ( $noveganRecette)) -}}
-        <div class="col">
-          <div class="card p-2 my-3 fs-6 border-danger shadow">
-            <div class="card-body">
+        <div class="col-12 col-md-6 col-lg-6 col-xl-6">
+          <div class="card border-danger shadow">
+            <div class="card-body small">
           {{- with $alergeneRecette -}}
-          <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "rem" 2) }} Ingrédients alergenes :
+          <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "fs" 4) }} Ingrédients alergenes :
             {{ delimit $alergeneRecette ", "}}
           </div>
           {{- end -}}
           {{- with $glutenRecette -}}
-          <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "rem" 2) }} 
+          <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "fs" 4) }} 
             Ingrédients contenant du gluten :
             {{ delimit $glutenRecette ", "}}
           </div>
           {{- end -}}
           {{- with $lactoseRecette -}}
-          <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "rem" 2) }}
+          <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "fs" 4) }}
             Ingrédients contenant du lactose :
             {{ delimit $lactoseRecette ", "}}
           </div>
           {{- end -}}
           {{- with $noveganRecette -}}
-          <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "rem" 2) }}            Ingrédients non-vegan :
+          <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "fs" 4) }}            Ingrédients non-vegan :
             {{ delimit $noveganRecette ", "}}
           </div>
           {{- end -}}
@@ -142,10 +144,11 @@
         </div>
         {{- end -}}
       </div>
-    <hr>
+    <hr class="mt-2 no-print">
 
 
 {{/*  INGREDIENTS  */}}
+
 <div class="row">
   <div class="col-md-4 print-col-30-100">
     <h4>Ingredients </h4>
@@ -157,14 +160,11 @@
       {{- range $key, $value := .Params.ingredients  -}}
         {{- with . -}}
         <div class="card my-2 p-2 " outlined>
-          <div class="row">
-            <div class="col">
-              <span class="">{{ $key | strings.FirstUpper }} </span>
-              {{- range $index, $element := . -}}
+              <span class="fw-bold text-center">{{ $key | strings.FirstUpper }} </span>
+              
+              {{- range $index, $element := . -}} 
                 {{ partial "components/ingredients" (dict "title" .title "quantite" .quantite "unit" .unit "alergene" $alergene  ) }}
               {{end}}
-            </div>
-          </div>
         </div>
        {{- end -}} {{/* with */}} 
       {{- end -}} {{/* range key value */}}

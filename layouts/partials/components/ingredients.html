@@ -1,5 +1,6 @@
-<div class="small">
+<div class="small ps-1">
   {{ $ingredientName := .title }}
+
 
   {{ if in  .alergene  .title }}
     <span class="fw-bold">{{ .title }}</span>
@@ -8,6 +9,7 @@
           "src" "fonticons/exclamation-triangle"
           "display" "inline" 
           "title" "Alergène"
+          "fs" 5
            ) }}
   {{ else }}
     <span class="fw-bold">{{- .title -}}</span>

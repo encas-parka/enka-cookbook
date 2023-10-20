@@ -633,6 +633,15 @@ collections:
                   required: false,
                 }
 
+              - {
+                  label: "Recette lié à un plat",
+                  name: "partof",
+                  widget: "string",
+                  hint: "Si cette recette fait partie d'un plat comportant plusieurs recettes, vous pouvez préciser ici le nom du plat afin qu'il soit visible sur les fiches recettes (et faire de même sur toutes les recettes du plat.)",
+                  required: false,
+                }
+
+
               # - label: "Inclure les recettes alternatives pour les régimes spéciaux (végan, sans gluten...) si elles existent"
               #   name: "includeRecetteAlt"
               #   widget: "boolean"

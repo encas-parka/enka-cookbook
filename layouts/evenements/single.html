@@ -3,8 +3,6 @@
 <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css"
 rel="stylesheet">
 
-
-
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"> 
 
 <!-- Liste qui contiendra tous les ingrédients avec leurs données associés (quantité, recette, date, assietes...). Sert aux tableaux des quantités.  -->
@@ -42,6 +40,7 @@ rel="stylesheet">
       "assiettes" $assiettes 
       "chef" .chef 
       "commentaire" .commentaire
+      "partof" .partof
       )  -}}
 
     {{$recetteKey = (add (float $recetteKey) 1)}}
@@ -265,7 +264,7 @@ rel="stylesheet">
              </template>
             </div>
             </v-toolbar>
-     </div>
+  </div>
 
 
 
@@ -274,7 +273,7 @@ rel="stylesheet">
 {{/* LES RECETTES   */}}
 
 
-    <v-container v-show="showedSection.includes('recettes') || printRecettes" :class="{ 'printonly' : !showedSection.includes('recettes')}">
+    <div v-show="showedSection.includes('recettes') || printRecettes" :class="{ 'printonly' : !showedSection.includes('recettes')}">
       <h3 id="Recettes" class="no-print">Les {{len $recettesList}} recettes prévues pour l'événement "{{.Page.Title}}"</h3>
       <div class="row d-print-none p-2">
           <v-switch
@@ -313,6 +312,8 @@ rel="stylesheet">
 </div>
 
 
+{{/*  LES RECETTES  */}}
+
       {{ range sort $recettesList }}
       {{/*  variables  */}}
 
@@ -333,21 +334,24 @@ rel="stylesheet">
             {{ $horaire = "" }}
           {{ end }}
         </div>
-
-
-        <div class="card break-after avoid-break-inside my-4 p-2 bg-light bg-opacity-25"  >
-          <div class="card-body py-1 ">
+          <div id="lesRecettes" class="card break-after avoid-break-inside my-4 p-2 bg-light bg-opacity-25 print-enlarge"  >
+          <div class="card-body py-1 print-enlarge">
             <div class="py-1">
-              <div :class="{'h2 my-2': $vuetify.breakpoint.mdAndUp ,'h4 my-1 py-0' : $vuetify.breakpoint.mdAndDown || !displayDetails }" id="{{ .recetteKey }}">{{ .recette }}</div>
+              <div :class="{'h2 my-2': $vuetify.breakpoint.mdAndUp ,'h4 my-1 py-0' : $vuetify.breakpoint.mdAndDown || !displayDetails }" id="{{ .recetteKey }}">{{ .recette }}
+              {{ with .partof }}
+              <span class="ms-3 fs-5">(pour : {{ . }})</span>
+              {{ end }}
+              </div>
+              
             </div>
             <div class="row">
               <div class="col">
                 <div :class="{'fw-semibold fs-5' : $vuetify.breakpoint.mdAndUp,} "> {{ .dateService | time.Format "Monday 2 January "}} - {{ .horaire }} - {{ .typePlat }}</div>
-                <div class="fw-light">
-                {{if .chef}} 
-                <span>Référent•es: {{ .chef }} - </span>
-                {{end}}
-                <span>Nombre d'assietes: {{ .assiettes }}</span>
+                <div class="">
+                  <div class="print-fs-4 print-bold">Nombre de couverts: {{ .assiettes }}</div>
+                  {{ if .chef }} 
+                    <div>R éférent•es: {{ .chef }} - </div>
+                  {{ end }}
                  </div>
                 <div>
                   {{- $url:= print .recette | urlize -}}
@@ -358,23 +362,25 @@ rel="stylesheet">
                   {{ end }}
                   {{- $url:= print .recette | urlize -}}
                   {{- with site.GetPage $url -}}
-          
-                  {{ if .Params.materiel }}
-                    {{ range .Params.materiel }}
-                      <div class="badge bg-grey ">{{ . }}</div>
-                    {{ end }}
-                  {{ end }}
+    
                 </div>
           
               </div>
               <div class="col text-end">
-                  {{ partial "content/badge-recette.html" . }}
+                <div class="mb-2">{{ partial "content/badge-recette.html" . }}</div>
+                <div>
+                  {{ if .Params.materiel }}
+                  {{ range .Params.materiel }}
+                  <div class="badge bg-grey float-end me-1">{{ . }}</div>
+                  {{ end }}
+                  {{ end }}
+                </div>
               </div>
                 {{ end }} {{/* with site.GetPage $url */}}
             </div >
               
         {{/*  LES INGREDIENTS  */}}
-            <div class="row" v-show="displayDetails">
+            <div id="lesIngredients" class="row" v-show="displayDetails">
               <div class="col-md-4 print-col-30-100">
                 <h5 :class="{'text-center ': $vuetify.breakpoint.smAndUp}">Ingrédients</h5>
                 
@@ -448,11 +454,9 @@ rel="stylesheet">
                 <h5 class="text-center">Préparation</h5>
                 <div class=" card card-body">
                   {{ if .Params.preparation24h }}
-              <div class="border border-danger mb-4">
-                <div class="p-2">
-                  <div class="h5 mt-0">A prévoir à l'avance !</div>
+              <div class="card border border-danger mb-4 p-3 " >
+                  <p class="fs-5 fw-bold text-center print-fs-medium" >A prévoir à l'avance !</p>
                   <div>{{ .Params.preparation24h | markdownify }}</div>
-                </div>
               </div>
               {{ end }}
                   {{ .Params.preparation | markdownify }}
@@ -472,7 +476,7 @@ rel="stylesheet">
     {{ end }}
     </div>
 
-  </v-container>
+  </div>
 
 <!--  -->
 
