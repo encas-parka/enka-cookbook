@@ -694,4 +694,53 @@
 
   
 
+
+
+  .card {
+    border-color: black !important;
+    box-shadow: none ! important
+  }
+
+ 
+
+
+  // Font Size
+  .print-fs-small {
+    font-size: small !important;
+  }
+
+  .print-fs-smaller {
+    font-size: smaller !important;
+  }
+
+  .print-fs-medium {
+    font-size: medium !important;
+    }
+  
+  .print-fs-large {
+    font-size: large !important;
+    }
+
+  .print-fs-4 {
+    font-size: 1.3em !important;
+   }
+
+  .print-bold {
+    font-weight: 600;
+  }
+
+
+// Suppression des marges et pading
+
+  .content {
+    padding: 0 !important;
+
+  }
+
+ .print-enlarge { 
+    border: 0;
+    margin: 0;
+    padding: 0;
+  }
+
 }
