@@ -11,6 +11,7 @@ repas:
         type_plat: entree
         altAssiettes: 19
         chef: you
+        partof: Test de partof
       - recette: Gateau de sésame
         type_plat: dessert
         altAssiettes: 120
