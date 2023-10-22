@@ -89,183 +89,34 @@ rel="stylesheet">
   {{ $linkCMSPage := (path.Join "/admin/#/collections/evenement/entries/" (.Title | urlize)) }}
   <span class="text-end no-print p-2"><a target="_blank" rel="noopener noreferrer" href="{{$linkCMSPage}}/index">Modifier</a></span>
 
-  <div class="position-sticky top-0 z-9 no-print" >
-    <v-toolbar
-        elevation="4"
-        outlined
-        rounded
-      >
+ 
 
-          {{/*  MeNu bar : ecran large  */}}
-           <div v-if="$vuetify.breakpoint.mdAndUp">
-             <v-btn 
-              class="mx-3" 
-              @click="showSection('recettes')"
-              :color="isActive === 'recettes' ? 'primary' : 'light'"
-              >Les recettes</v-btn>
-             <v-btn 
-              class="mx-3 "
-              @click="showSection('ingredients')"
-              :color="isActive === 'ingredients' ? 'primary' : 'light'"
-               >Listes des ingrédients</v-btn>
-             {{/*  <v-btn 
-              class="mx-3 " 
-              @click="showSection('affiches')"
-              :color="isActive === 'affiches' ? 'primary' : 'light'"
-             >Les affiches</v-btn>  */}}
-             <template class="no-print">
-               <v-dialog
-                v-model="printDialog"
-                scrollable
-                max-width="350px"
-                class="d-print-none"
-                >
-                <template v-slot:activator="{ on, attrs }" 
-               >
-                 <v-btn 
-                  v-bind="attrs"
-                  v-on="on"
-                  class=""
-                 >Impression / PDF
-                </v-btn>
-                </template>
-                 <v-card class="p-3 d-print-none">
-                   <v-card-title>Impression</v-card-title>
-                   <v-card-subtitle>Sélectionnez ce que vous souhaitez imprimer</v-card-subtitle>
-                       <v-switch
-                        v-model="printRecettes"
-                        label="Les recettes"
-                       >
-                       </v-switch>
-                       <v-switch
-                        v-model="printIngredients"
-                        label="Les ingrédients"
-                       >
-                       </v-switch>
-                       <v-switch
-                        v-model="showAllRow"
-                        label="avec les quantité de chaque recette"
-                        class="ml-5"
-                       >
-
-                       </v-switch>
-                       {{/*  <v-switch
-                        v-model="printAffiches"
-                        label="Les affiches"
-                       >
-                       </v-switch>  */}}
-                   <v-card-actions>
-                     <v-row>
-                       <v-col>
-                         <v-btn
-                         color="warning"
-                         @click="printDialog = false">
-                           Annuler
-                         </v-btn>
-                       </v-col>
-                       <v-col>
-                         <v-btn
-                         color="primary"
-                         @click="print"
-                         >
-                           Imprimer
-                         </v-btn>
-                       </v-col>
-                     </v-row>
-                   </v-card-actions>
-               
-                 </v-card>
-               </v-dialog>
-             </template>
-           </div>
-
-           {{/*  Menu large, petit ecran  */}}
-             <div v-if="$vuetify.breakpoint.smAndDown">
-              <v-menu offset-y>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn
-                    v-on="on"
-                    v-bind="attrs"
-                    fab
-                    small
-                    color="primary"
-                    class="mx-3"
-                  > <v-icon>mdi-menu</v-icon>
-                  </v-btn>
-            </template>
-                  <v-list>
-                    <v-list-item>
-                      <v-btn
-                        text
-                        @click="showSection('recettes')">
-                        <a href="#Recettes">Les recettes</a>
-                      </v-btn>
-                    </v-list-item>
-                    <v-list-item>
-                      <v-btn
-                        text
-                        @click="showSection('ingredients')"
-                        >
-                        Listes des ingrédients
-                      </v-btn>
-                    </v-list-item>
-                      {{/*  TODO : les affiches !  */}}
-                    {{/*  <v-list-item >
-                      <v-btn
-                        text
-                        @click="showSection('affiches')"
-                        >
-                        Les Affiches
-                      </v-btn>  
-                    </v-list-item>  */}}
-                  </v-list> 
-              </v-menu>
-           
-        <template class="no-print">
-          <v-dialog v-model="printDialog" scrollable max-width="350px" class="d-print-none">
-            <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              v-on="on"
-              v-bind="attrs"
-              fab
-              small
-              > <v-icon>mdi-file</v-icon>
-            </v-btn>
-            </template>
-              <v-card class="p-3 d-print-none">
-                <v-card-title>Impression</v-card-title>
-                <v-card-subtitle>Sélectionnez ce que vous souhaitez imprimer</v-card-subtitle>
-                <v-switch v-model="printRecettes" label="Les recettes">
-                </v-switch>
-                <v-switch v-model="printIngredients" label="Les ingrédients">
-                </v-switch>
-                <v-switch v-model="showAllRow" label="avec les quantité de chaque recette" class="ml-5">
-              
-                </v-switch>
-                {{/*  <v-switch v-model="printAffiches" label="Les affiches">
-                </v-switch>  */}}
-                <v-card-actions>
-                  <v-row>
-                    <v-col>
-                      <v-btn color="warning" @click="printDialog = false">
-                        Annuler
-                      </v-btn>
-                    </v-col>
-                    <v-col>
-                      <v-btn color="primary" @click="print">
-                        Imprimer
-                      </v-btn>
-                    </v-col>
-                  </v-row>
-                </v-card-actions>
-              
-              </v-card>
-              </v-dialog>
-             </template>
-            </div>
-            </v-toolbar>
-  </div>
-
+{{/* Nouveau menu BOOTSTRAP */}}
+<div class="position-sticky top-0 z-9 no-print">
+  <nav class="navbar navbar-expand-md navbar-light bg-light shadow py-2  rounded-bottom-4 border border-2 ">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarEvent"
+      aria-controls="navbarEvent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarEvent">
+      <ul class="navbar-nav">
+        <li class="nav-item p-1">
+          <button class="btn btn-primary shadow-sm" @click="showSection('recettes')"
+            :class="{ 'active': isActive === 'recettes' }">Recette</button>
+        </li>
+        <li class="nav-item p-1">
+          <button class="btn btn-primary shadow-sm" @click="showSection('ingredients')"
+            :class="{ 'active': isActive === 'ingredients' }">Ingrédient</button>
+        </li>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item p-1">
+          <button class="btn btn-primary shadow-sm" @click="printDialog = true">Impression / PDF</button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</div>
 
 
 
@@ -275,13 +126,13 @@ rel="stylesheet">
 
     <div v-show="showedSection.includes('recettes') || printRecettes" :class="{ 'printonly' : !showedSection.includes('recettes')}">
       <h3 id="Recettes" class="no-print">Les {{len $recettesList}} recettes prévues pour l'événement "{{.Page.Title}}"</h3>
-      <div class="row d-print-none p-2">
-          <v-switch
-            v-model="displayDetails"
-            label="Afficher Détails"
-            class="col-auto ms-auto card" 
-          ></v-switch>
-      </div>
+          <div class="col-3 ms-auto">
+            <div class=" d-print-none p-2 ms-auto form-check form-switch"
+              >
+            <input class="form-check-input" type="checkbox" role="switch" id="switchDetailDisplay" v-model="displayDetails">
+            <label for="switchDetailDisplay" class="form-check-label">Afficher les détails</label>
+                    </div>
+          </div>
 
     <div :class="{'no-print':!printRecettes}">
 
@@ -446,10 +297,7 @@ rel="stylesheet">
             
               </div>
           
-          
-          
-          
-        {{/*  PREPARATION  */}}
+      {{/*  PREPARATION  */}}
               <div class="col-md-8 print-col-70-100">
                 <h5 class="text-center">Préparation</h5>
                 <div class=" card card-body">
@@ -561,56 +409,93 @@ rel="stylesheet">
         </v-navigation-drawer>
     
 
-  
+{{/* LISTE des INGREDIENTS   */}}
 
-         
     <div class="col-md-8 col-12 print-col-12" :class="{'no-print':!printIngredients}">
     {{ range sort $IngredientsTypesList "iType" "desc"}}
-        <v-card v-if="this.totalsIngredientFiltered('{{.iType}}', 'ingredients').length > 0"  outlined class="my-2 mb-lg-6 avoid-break-inside  grey lighten-5 ">
-          <v-card-title >Ingrédients {{ .iType }} 
-            <span
-            v-if="startDate !== startDateSelected || endDate !== endDateSelected" class="small ms-2">
-                - Du [[new Date (startDateSelected).toLocaleDateString("fr")]] au [[new Date (endDateSelected).toLocaleDateString("fr")]]
-            </span>
-          </v-card-title>
-                  
-          <v-data-table 
-          :items="totalsIngredientFiltered('{{ .iType }}', 
-          'ingredients')" :headers="totalsEachIngredientHeaders" 
-          sort-by="ingredient" 
-          disable-pagination hide-default-footer hide-default-header 
-          class="p-2 m-2 bg-white bg-opacity-75" 
-          :search="search">
-            <template v-slot:item="{ item }">
-              <tr :class="{'grey lighten-3 fw-bold'  : item.total && showAllRow}" v-if="showAllRow || item.total !== undefined ">
-                <td>[[item.ingredient]]</td>
-                <td v-if="item.recette">
-                  <span class="fw-bold">[[item.recette]]</span> le [[new Date(item.dateService).toLocaleDateString("fr")]]  -
-                  [[item.horaire]] <br> pour [[item.assiettes]] assiettes 
-                  <span class="fw-bold float-right" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span></td>
-                <td v-else :class="{'no-print' : !showAllRow }"></td>
-                <td  class="text-right">
-                [[item.total]] 
-                <span v-if="item.total !== 'non présisé' &&  item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
-                <span v-if="Array.isArray(item.fallbackTotal)">
-                  <template v-for="(fallback, index) in item.fallbackTotal">
-                    <span>[[fallback.quantite]] [[fallback.unit]]</span>
-                    <template v-if="index !== item.fallbackTotal.length - 1">
-                      <span> + </span>
-                    </template>
-                  </template>
-                </span>
+        <div v-if="this.totalsIngredientsFiltered('{{.iType}}', 'ingredients').length > 0" class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary">
+          <div class="card-body">
+            <div class="card-title h4 my-1"> Ingrédients {{ .iType }}
+              <span
+              v-if="startDate !== startDateSelected || endDate !== endDateSelected" class="small ms-2">
+                  - Du [[new Date (startDateSelected).toLocaleDateString("fr")]] au [[new Date (endDateSelected).toLocaleDateString("fr")]]
+              </span>
+          </div>
+    
 
+          {{/*  Table avec Details des recettes  */}}
 
+          <table class="table table-bordered-bottom table-responsive" v-if="showAllRow" :class="{'no-print':!printIngredientsSimple}">
+            <thead>
+              <tr>
+                <th>Ingredients</th>
+                <th class="text-center">Recettes</th>
+                <th class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in totalsAndDetailIngredientsFiltered('{{ .iType }}', 'ingredients')"
+                :class="{'table-secondary fw-bold': item.total}"
+                >
+                <td :class="{'small text-muted': !item.total}">[[item.ingredient]]</td>
+                <td v-if="item.recette" class="small">
+                  <span class="fw-bold">[[item.recette]]</span> le [[new Date(item.dateService).toLocaleDateString("fr")]] -
+                  [[item.horaire]] <br> pour [[item.assiettes]] couverts
+                  <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span>
                 </td>
+                <td v-else></td>
+                <td class="text-right text-nowrap">
+                  [[item.total]]
+                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
+                  <span v-if="Array.isArray(item.fallbackTotal)">
+                    <template v-for="(fallback, index) in item.fallbackTotal">
+                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
+                      <template v-if="index !== item.fallbackTotal.length - 1">
+                        <span> + </span>
+                      </template>
+                    </template>
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          {{/* Table Sans Details des recettes */}}
+          <table class="table table-bordered-bottom" v-if="!showAllRow" :class="{'no-print':!printIngredientsDetailled}">
+            <thead>
+              <tr>
+                <th>Ingredients</th>
+                <th class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in totalsIngredientsFiltered('{{ .iType }}', 'ingredients')"
+                :class="{'table-secondary fw-bold': item.total && showAllRow}">
+                <template v-if="item.total">
+                  <td>[[item.ingredient]]</td>
+                  
+                <td class="text-right  text-nowrap">
+                  [[item.total]]
+                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
+                  <span v-if="Array.isArray(item.fallbackTotal)">
+                    <template v-for="(fallback, index) in item.fallbackTotal">
+                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
+                      <template v-if="index !== item.fallbackTotal.length - 1">
+                        <span> + </span>
+                      </template>
+                    </template>
+                  </span>
+                </td>
+                </template>
 
               </tr>
-            </template>
-          </v-data-table> 
-        </v-card>
+            </tbody>
+          </table>
+          </div>
+        </div>
       {{ end }}
 
-     
+   
 
     </div>
   </div>
@@ -727,6 +612,11 @@ rel="stylesheet">
 
         printRecettes: true,
         printIngredients: true,
+        printIngredientsSimple: true,
+        printIngredientsDetailed: false,
+        printIngredientsRowSup1: true,
+        printIngredientsRowSup2: true,
+
         {{/*  printAffiches: false,  */}}
 
         printDialog: false,
@@ -735,7 +625,6 @@ rel="stylesheet">
         isActive : null,
         IngredientsTypesList: [{{ range $IngredientsTypesList }} {{ .iType }}, {{ end }} ],
 
-        filteredTest: "",
       
       
   } {{/* return */}}    
@@ -804,10 +693,34 @@ computed: {
         quantite: quantite,
       }
     });
-  }
+  },
 
+  {{/*  DEBUG  */}}
+  testtotalsIngredientsFiltered: function() {
+    return this.totalsIngredientsFiltered('Autres')
+  },
+  testfilteredIngredients: function() {
+    return this.filteredIngredients('Autres')
+  },
+  testtotalsIngredients: function() {
+    return this.totalsIngredients(this.filteredIngredients('Autres'))
+  },
+  testtotalsIngredientsAll: function() {
+   const total = this.totalsIngredients(this.filteredIngredients('Autres'));
+   const element = this.filteredIngredients('Autres');
+
+  const result = new Set ([...element, ...total].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
+    
+    return result;
+  },
+
+
+  totalsIngredientsFrais3Days: function (){
+    const totalsIngredientFiltered = totalsIngredientsFiltered(Frais)
+  },
 
 }, // computed end
+
 
 watch: {
 
@@ -853,9 +766,6 @@ methods: {
     window.print();
   },
 
-
-
-
   updateSelectedAttribute (e) {
     let sel, i;
 
@@ -896,171 +806,131 @@ methods: {
     return quantite / 1000;
   },
 
-totalsIngredientFiltered: function (iType, ingredientsList) {
-  // Récupérer la liste des ingrédients
-  let ingredients = this.ingredients;
-
-  // Filtrer les ingrédients selon les critères spécifiés
-  const totals = ingredients.filter(
-    (i) =>
-      i.ingredientType === iType &&
-      i.dateService >= this.startDateSelected &&
-      i.dateService <= this.endDateSelectedDebug &&
-      i.ingredient.toLowerCase().includes(this.search.toLowerCase())
-  );
-
-  // Créer une carte pour stocker les quantités totales par ingrédient
-  const listQuantite = new Map();
-
-  // Parcourir les ingrédients filtrés
-  totals.forEach((item) => {
-    // Vérifier si l'ingrédient est déjà présent dans la carte des quantités
-    if (!listQuantite.has(item.ingredient)) {
-      // Si non, ajouter une entrée vide pour cet ingrédient
-      listQuantite.set(item.ingredient, []);
-    }
-
-    // Vérifier si une quantité avec la même unité existe déjà pour cet ingrédient
-    const existingQuantity = listQuantite
-      .get(item.ingredient)
-      .find((quantity) => quantity.unit === item.unit);
-
-    if (existingQuantity) {
-      // Si une quantité existe déjà, additionner la quantité actuelle à celle existante
-      existingQuantity.quantite += item.quantite;
-    } else {
-      // Sinon, ajouter une nouvelle quantité à la liste des quantités pour cet ingrédient
-      listQuantite.get(item.ingredient).push({
-        quantite: item.unit === 'grammes' ? this.convertToKg(item.quantite) : item.quantite,
-        unit: item.unit,
-      });
-    }
-
-    // Vérifier si l'ingrédient existe déjà dans les totaux
-    if (!totals[item.ingredient]) {
-      // Si non, initialiser les totaux pour cet ingrédient
-      totals[item.ingredient] = {
-        unitTotal: item.unit,
-        total: 0,
-      };
-    }
-
-    // Vérifier si l'unité de l'ingrédient correspond à l'unité actuelle
-    if (totals[item.ingredient].unitTotal === item.unit) {
-      // Si oui, additionner la quantité à la totalité de l'ingrédient
-      totals[item.ingredient].total += item.quantite;
-    } else if (item.unit === 'grammes' && totals[item.ingredient].unitTotal === 'Kg') {
-      // Si les unités sont différentes (grammes et Kg), convertir la quantité en Kg avant de l'ajouter à la totalité
-      const total = this.convertToKg(item.quantite);
-        totals[item.ingredient].total += total;
-        totals[item.ingredient].unitTotal = 'Kg';
-
-    } else {
-      // Si les unités ne peuvent pas s'additionner ou sont de différentes natures, ajouter la quantité à la liste des quantités alternatives
-      totals[item.ingredient] = {
-        total: 'Incalculable...',
-      };
-    }
-
-    // Arrondir à 2 décimales
-    if (typeof totals[item.ingredient].total === 'number' && totals[item.ingredient].total > 0) {
-      const rounded = totals[item.ingredient].total;
-      totals[item.ingredient].total = Math.round(rounded * 100) / 100;
-    } else if (totals[item.ingredient].total === 'Incalculable...') {
-      // Si le total est incalculable, utiliser la liste des quantités alternatives
-      totals[item.ingredient] = {
-        total: 'Incalculable...',
-        fallbackTotal: listQuantite.get(item.ingredient).map((quantity) => ({
-        quantite: Math.round(quantity.quantite * 100) / 100,
-        unit: quantity.unit,
-        })),
-      };
-    } else {
-      // Si le total n'est pas un nombre valide, le définir comme "non précisé"
-      totals[item.ingredient].total = 'non précisé';
-    }
-  });
-
-  // Retourner les totaux des ingrédients filtrés
-  return Object.entries(totals).map(([ingredient, { unitTotal, total, fallbackTotal, ...item }]) => ({
-    ingredient,
-    unitTotal,
-    total,
-    fallbackTotal,
-    ...item,
-  }));
-},
 
 
-
-
-
-
-  totalsIngredientFilteredBAK: function (iType, ingredientsList) {
-    // Crée un tableau des totaux de chaque ingrédient lorsque leurs unités ne sont pas différentes. Si Kg et grammes : conversion en Kg avec convertToKg()
   
+{{/*  FIXIT  */}}
+
+  filteredIngredients: function (iType) {
     // Récupérer la liste des ingrédients
-    let ingredients;
-    ingredients = this.ingredients;
+    let ingredients = this.ingredients
 
     // Filtrer les ingrédients selon les critères spécifiés
-    const totals = ingredients.filter(
-      i => i.ingredientType === iType && 
-      i.dateService >= this.startDateSelected && 
-      i.dateService <= this.endDateSelectedDebug &&
-      i.ingredient.toLowerCase().includes(this.search.toLowerCase()) 
+    const filtered = ingredients.filter(
+      (i) =>
+        i.ingredientType === iType &&
+        i.dateService >= this.startDateSelected &&
+        i.dateService <= this.endDateSelectedDebug &&
+        i.ingredient.toLowerCase().includes(this.search.toLowerCase())
     );
+    return filtered
+  },
 
-    // Créer une carte pour stocker les quantités totales par ingrédient
+  totalsIngredients: function (filteredIng) {
+    const totals = [];
     const listQuantite = new Map();
-  
-    // Parcourir les ingrédients filtrés
-    totals.forEach((item) => {
-      if (!totals[item.ingredient]) { 
+
+    filteredIng.forEach((item) => {
+      // Vérifier si l'ingrédient est déjà présent dans la carte des quantités
+      if (!listQuantite.has(item.ingredient)) {
+        // Si non, ajouter une entrée vide pour cet ingrédient
+        listQuantite.set(item.ingredient, []);
+      }
+
+      // Vérifier si une quantité avec la même unité existe déjà pour cet ingrédient
+      const existingQuantity = listQuantite
+        .get(item.ingredient)
+        .find((quantity) => quantity.unit === item.unit);
+
+      if (existingQuantity) {
+        // Si une quantité existe déjà, additionner la quantité actuelle à celle existante
+        existingQuantity.quantite += item.quantite;
+      } else {
+        // Sinon, ajouter une nouvelle quantité à la liste des quantités pour cet ingrédient
+        listQuantite.get(item.ingredient).push({
+          quantite: item.unit === 'grammes' ? this.convertToKg(item.quantite) : item.quantite,
+          unit: item.unit,
+        });
+      }
+
+      // Vérifier si l'ingrédient existe déjà dans les totaux
+      if (!totals[item.ingredient]) {
+        // Si non, initialiser les totaux pour cet ingrédient
         totals[item.ingredient] = {
           unitTotal: item.unit,
           total: 0,
         };
       }
-      if (!listQuantite.has(item.ingredient)) {
-        listQuantite.set(item.ingredient, []);
-      }
 
+      // Vérifier si l'unité de l'ingrédient correspond à l'unité actuelle
       if (totals[item.ingredient].unitTotal === item.unit) {
+        // Si oui, additionner la quantité à la totalité de l'ingrédient
         totals[item.ingredient].total += item.quantite;
       } else if (item.unit === 'grammes' && totals[item.ingredient].unitTotal === 'Kg') {
-        // Convertir la quantité en Kg avant de l'ajouter au total
+        // Si les unités sont différentes (grammes et Kg), convertir la quantité en Kg avant de l'ajouter à la totalité
         const total = this.convertToKg(item.quantite);
         totals[item.ingredient].total += total;
-        totals[item.ingredient].unitTotal = 'Kg'
-      } else { // si les unités ne peuvent pas s'additionner / sont de différentes natures...
-        listQuantite.get(item.ingredient).push({ 
-          quantite: item.quantite, 
-          unit: item.unit 
-        });
-           totals[item.ingredient] = {
-      total: "incalculable",
-      fallbackTotal: listQuantite.get(item.ingredient),
-      unitTotal: [totals[item.ingredient].unitTotal, item.unit],
-    }; 
+        totals[item.ingredient].unitTotal = 'Kg';
+
+      } else {
+        // Si les unités ne peuvent pas s'additionner ou sont de différentes natures, ajouter la quantité à la liste des quantités alternatives
+        totals[item.ingredient] = {
+          total: 'Incalculable...',
+        };
       }
 
       // Arrondir à 2 décimales
-      if (typeof totals[item.ingredient].total === "number" && totals[item.ingredient].total > 0 ) {
-        const rounded = totals[item.ingredient].total ;
+      if (typeof totals[item.ingredient].total === 'number' && totals[item.ingredient].total > 0) {
+        const rounded = totals[item.ingredient].total;
         totals[item.ingredient].total = Math.round(rounded * 100) / 100;
-      } else if (totals[item.ingredient].total === "incalculable" ) {
-        totals[item.ingredient].fallbackTotal = listQuantite.get(item.ingredient);
-          console.log('Ingrédient :', item.ingredient);
-          console.log('Fallback total actuel :', totals[item.ingredient].fallbackTotal);
-      } else { // si les quantités sont manquantes (comme pour des épices...)
-        totals[item.ingredient].total = "non précisé";
+      } else if (totals[item.ingredient].total === 'Incalculable...') {
+        // Si le total est incalculable, utiliser la liste des quantités alternatives
+        totals[item.ingredient] = {
+          total: 'Incalculable...',
+          fallbackTotal: listQuantite.get(item.ingredient).map((quantity) => ({
+            quantite: Math.round(quantity.quantite * 100) / 100,
+            unit: quantity.unit,
+          })),
+        };
+      } else {
+        // Si le total n'est pas un nombre valide, le définir comme "non précisé"
+        totals[item.ingredient].total = 'non précisé';
       }
     });
 
-    // Renvoyer la carte avec les nouveaux paramètres sous forme de tableau
-    return Object.entries(totals).map(([ingredient, { unitTotal, total, fallbackTotal, ...item}]) => ({ ingredient, unitTotal, total, fallbackTotal, ...item}));
+    // Retourner les totaux des ingrédients filtrés (trié par noms d'ingredients)
+    return Object.entries(totals).map(([ingredient, { unitTotal, total, fallbackTotal, ...item }]) => ({
+      ingredient,
+      unitTotal,
+      total,
+      fallbackTotal,
+      ...item,
+    })).sort((a, b) => a.ingredient.localeCompare(b.ingredient));
   },
+
+ 
+  totalsIngredientsFiltered(iType) {
+    // Appeler la première méthode pour filtrer les ingrédients
+    const filtered = this.filteredIngredients(iType);
+
+    // Appeler la deuxième méthode pour calculer les totaux à partir des ingrédients filtrés
+    const totals = this.totalsIngredients(filtered);
+
+    // Retourner les totaux
+    return totals;
+  },
+
+  totalsAndDetailIngredientsFiltered(iType) {
+    const total = this.totalsIngredients(this.filteredIngredients(iType));
+    const element = this.filteredIngredients(iType);
+
+    const result = new Set([...element, ...total].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
+
+    return result;
+  },
+
+  {{/*  FIXIT ^^^  */}}
+
 
 
 
