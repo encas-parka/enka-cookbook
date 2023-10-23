@@ -3,6 +3,10 @@
 <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css"
 rel="stylesheet">
 
+{{/*  TODO : npm i flatpickr --save si ca marche  */}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"> 
 
 <!-- Liste qui contiendra tous les ingrédients avec leurs données associés (quantité, recette, date, assietes...). Sert aux tableaux des quantités.  -->
@@ -91,7 +95,7 @@ rel="stylesheet">
 
  
 
-{{/* Nouveau menu BOOTSTRAP */}}
+{{/* ::: :: menu page */}}
 <div class="position-sticky top-0 z-9 no-print">
   <nav class="navbar navbar-expand-md navbar-light bg-light shadow py-2  rounded-bottom-4 border border-2 ">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarEvent"
@@ -122,7 +126,6 @@ rel="stylesheet">
 
 
 {{/* LES RECETTES   */}}
-
 
     <div v-show="showedSection.includes('recettes') || printRecettes" :class="{ 'printonly' : !showedSection.includes('recettes')}">
       <h3 id="Recettes" class="no-print">Les {{len $recettesList}} recettes prévues pour l'événement "{{.Page.Title}}"</h3>
@@ -327,188 +330,145 @@ rel="stylesheet">
   </div>
 
 <!--  -->
+<div class="container-fluid">
+  <div class="row justify-content-evenly">
 
-<v-container v-show="showedSection.includes('ingredients') || printIngredients" :class="{ 'printonly' : !showedSection.includes('ingredients') } ">
-<h3 class="no-print">Listes d'ingrédients et quantités</h3>
- <div class="row" justify="space-arround">
-    <v-navigation-drawer permanent class="no-print d-print-none d-flex flex-wrap" :class="{'sidefilter' : $vuetify.breakpoint.mdAndUp}">
-        <v-card class=" p-2  ">
-        
-          <v-menu
-            v-model="startDateMenu"
-            :close-on-content-click="false"
-            transition="scale-transition"
-            min-width="280px"
-            max-width="auto"
-            offset-y
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <v-text-field
-                  v-model="startDateSelected"
-                  label="à partir de la date..."
-                  prepend-icon="mdi-calendar"
-                  readonly
-                  v-bind="attrs"
-                  v-on="on"
-                ></v-text-field>
-              </template>
-              <v-date-picker
-                v-model="startDateSelected"
-                @input="startDateMenu = false"
-                :allowed-dates="datesAllowedRange"
-                :events="datesRepas"
-                event-color="primary"
-              ></v-date-picker>
-          </v-menu>
-          <v-menu
-            v-model="endDateMenu"
-            :close-on-content-click="false"
-            transition="scale-transition"
-            offset-y
-            min-width="280"
-            >
-            <template v-slot:activator="{ on, attrs }">
-              <v-text-field
-                v-model="endDateSelected"
-                label="...jusqu'à la date"
-                prepend-icon="mdi-calendar"
-                readonly
-                v-bind="attrs"
-                v-on="on"
-              >
-              </v-text-field>
-            </template>
-            <v-date-picker
-              v-model="endDateSelected"
-              @input="endDateMenu = false"
-              :allowed-dates="datesAllowedRange"
-              :events="datesRepas"
-              event-color="primary"
-            ></v-date-picker>
-          </v-menu>
-            <v-btn 
-              v-on:click="datesReset" 
-              x-small 
-              rounded
-              >
-              Toutes les dates
-            </v-btn>
-              
-            <v-text-field v-model="search" append-icon="mdi-magnify" label="Rechercher ingredient..."
-            single-line hide-details 
-            style="min-width:200px"></v-text-field>
-            <v-checkbox
-            v-model="showAllRow"
-            label="Afficher les quantité pour chaque recette"
-            style="min-width:200px"
-            ></v-checkbox>
-            
-          </v-card>
-
-          
-        </v-navigation-drawer>
+    {{/*  ::: __ Sidebar ingredients  */}}
+    <nav class="col-md-4 col-lg-3 d-md-block bg-light sidebar mt-7">
+      <div class="sticky-top" style="top: 10%">
     
-
-{{/* LISTE des INGREDIENTS   */}}
-
-    <div class="col-md-8 col-12 print-col-12" :class="{'no-print':!printIngredients}">
-    {{ range sort $IngredientsTypesList "iType" "desc"}}
-        <div v-if="this.totalsIngredientsFiltered('{{.iType}}', 'ingredients').length > 0" class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary">
-          <div class="card-body">
-            <div class="card-title h4 my-1"> Ingrédients {{ .iType }}
-              <span
-              v-if="startDate !== startDateSelected || endDate !== endDateSelected" class="small ms-2">
-                  - Du [[new Date (startDateSelected).toLocaleDateString("fr")]] au [[new Date (endDateSelected).toLocaleDateString("fr")]]
-              </span>
-          </div>
+        <div class="row-auto">
+         <div class="input-group" id="datePicker">
+            <label for="datePicker">Selectionner la période  que vous souhaitez prendre en compte</label>
     
-
-          {{/*  Table avec Details des recettes  */}}
-
-          <table class="table table-bordered-bottom table-responsive" v-if="showAllRow" :class="{'no-print':!printIngredientsSimple}">
-            <thead>
-              <tr>
-                <th>Ingredients</th>
-                <th class="text-center">Recettes</th>
-                <th class="text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in totalsAndDetailIngredientsFiltered('{{ .iType }}', 'ingredients')"
-                :class="{'table-secondary fw-bold': item.total}"
-                >
-                <td :class="{'small text-muted': !item.total}">[[item.ingredient]]</td>
-                <td v-if="item.recette" class="small">
-                  <span class="fw-bold">[[item.recette]]</span> le [[new Date(item.dateService).toLocaleDateString("fr")]] -
-                  [[item.horaire]] <br> pour [[item.assiettes]] couverts
-                  <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span>
-                </td>
-                <td v-else></td>
-                <td class="text-right text-nowrap">
-                  [[item.total]]
-                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
-                  <span v-if="Array.isArray(item.fallbackTotal)">
-                    <template v-for="(fallback, index) in item.fallbackTotal">
-                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
-                      <template v-if="index !== item.fallbackTotal.length - 1">
-                        <span> + </span>
-                      </template>
-                    </template>
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          
-          {{/* Table Sans Details des recettes */}}
-          <table class="table table-bordered-bottom" v-if="!showAllRow" :class="{'no-print':!printIngredientsDetailled}">
-            <thead>
-              <tr>
-                <th>Ingredients</th>
-                <th class="text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in totalsIngredientsFiltered('{{ .iType }}', 'ingredients')"
-                :class="{'table-secondary fw-bold': item.total && showAllRow}">
-                <template v-if="item.total">
-                  <td>[[item.ingredient]]</td>
-                  
-                <td class="text-right  text-nowrap">
-                  [[item.total]]
-                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
-                  <span v-if="Array.isArray(item.fallbackTotal)">
-                    <template v-for="(fallback, index) in item.fallbackTotal">
-                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
-                      <template v-if="index !== item.fallbackTotal.length - 1">
-                        <span> + </span>
-                      </template>
-                    </template>
-                  </span>
-                </td>
-                </template>
-
-              </tr>
-            </tbody>
-          </table>
+            <div class="col-auto">
+              <input id="datepickerStart" class="flatpickr flatpickr-input form-control me-2"
+                type="text" readonly="readonly" placeholder="Date de début" v-model="startDateSelected"
+                :config="configDPStart"></div>
+            <div class="col-auto">
+              <input id="datepickerEnd" class="flatpickr flatpickr-input form-control" type="text"
+                readonly="readonly" placeholder="Date de fin" v-model="endDateSelected" :config="configDPEnd"></div>
+            <div class="col">
+              <button class="btn btn-primary btn-sm shadow-sm text-white" @click="datePickerReset" type="button" id="btn-allDate">Toutes les dates</button>
+            </div>
           </div>
         </div>
-      {{ end }}
-
-   
-
+        <div>
+          <input type="checkbox" class="form-control" v-model="showAllRow">
+        </div>
+      </div>
+    </nav>
+  
+  {{/* ::: LISTE des INGREDIENTS   */}}
+  
+      <div class="col p-lg-4 print-col-12" :class="{'no-print':!printIngredients}">
+  
+    <div id="FraisByDay" class="">
+  
     </div>
-  </div>
-</v-container>
+  
+      {{ range sort $IngredientsTypesList "iType" "desc"}}
+          <div v-if="this.totalsIngredientsFiltered('{{.iType}}', 'ingredients').length > 0" class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary">
+            <div class="card-body">
+              <div class="card-title h4 my-1"> Ingrédients {{ .iType }}
+                <span
+                v-if="startDate !== startDateSelected || endDate !== endDateSelected" class="fs-6 ms-2">
+                    - Du [[new Date (startDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long', day: 'numeric'})]] au [[new Date (endDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long', day: 'numeric'})]]
+                </span>
+            </div>
+  
+  
+            {{/* ::: Table avec Details des recettes  */}}
+  
+            <table class="table table-bordered-bottom table-responsive" v-if="showAllRow" :class="{'no-print':!printIngredientsSimple}">
+              <thead>
+                <tr>
+                  <th>Ingredients</th>
+                  <th class="text-center">Recettes</th>
+                  <th class="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in totalsAndDetailIngredientsFiltered('{{ .iType }}', 'ingredients')"
+                  :class="{'table-secondary fw-bold': item.total}"
+                  >
+                  <td :class="{'small text-muted': !item.total}">[[item.ingredient]]</td>
+                  <td v-if="item.recette" class="small">
+                    <span class="fw-bold">[[item.recette]]</span> le [[new Date(item.dateService).toLocaleDateString("fr-FR", {weekday: 'short', month: 'long', day: 'numeric'})]] -
+                    [[item.horaire]] <br> pour [[item.assiettes]] couverts
+                    <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span>
+                  </td>
+                  <td v-else></td>
+                  <td class="text-right text-nowrap">
+                    [[item.total]]
+                    <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
+                    <span v-if="Array.isArray(item.fallbackTotal)">
+                      <template v-for="(fallback, index) in item.fallbackTotal">
+                        <span>[[fallback.quantite]] [[fallback.unit]]</span>
+                        <template v-if="index !== item.fallbackTotal.length - 1">
+                          <span> + </span>
+                        </template>
+                      </template>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+  
+            {{/* ::: Table Sans Details des recettes */}}
+            <table class="table table-bordered-bottom" v-if="!showAllRow" :class="{'no-print':!printIngredients}">
+              <thead>
+                <tr>
+                  <th>Ingredients</th>
+                  <th class="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in totalsIngredientsFiltered('{{ .iType }}', 'ingredients')"
+                  :class="{'table-secondary fw-bold': item.total && showAllRow}">
+                  <template v-if="item.total">
+                    <td>[[item.ingredient]]</td>
+  
+                  <td class="text-right  text-nowrap">
+                    [[item.total]]
+                    <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
+                    <span v-if="Array.isArray(item.fallbackTotal)">
+                      <template v-for="(fallback, index) in item.fallbackTotal">
+                        <span>[[fallback.quantite]] [[fallback.unit]]</span>
+                        <template v-if="index !== item.fallbackTotal.length - 1">
+                          <span> + </span>
+                        </template>
+                      </template>
+                    </span>
+                  </td>
+                  </template>
+  
+                </tr>
+              </tbody>
+            </table>
+            </div>
+          </div>
+        {{ end }}
+  
+  
+  
+      </div>
+    </div>
+</div>
+
 </v-app>
 </div> {{/* v-app end */}}
 
 
 <script nonce="6GwL6l4yhLQddbSv2ftKfX9sTqEkpYcmwyUPm5LEdgqF6VP27IUA5SLae8ScqZ171xC7gGVVZAOuYPJnsiUAzPadx4yFkdQ7GNHa" type="module" >
 
+  
+
+  {{/*  ::: VueApp  */}}
   const app = new Vue ({
     delimiters: ['[[', ']]'],
     el: '#app',
+
     vuetify: new Vuetify(),
     data () {
       return {
@@ -620,18 +580,29 @@ rel="stylesheet">
         {{/*  printAffiches: false,  */}}
 
         printDialog: false,
-
-        showedSection: ['recettes', 'ingredients'],
+          {{/*  TEST : reinclure : 'recettes'  */}}
+        showedSection: ['ingredients'],
         isActive : null,
         IngredientsTypesList: [{{ range $IngredientsTypesList }} {{ .iType }}, {{ end }} ],
+      
+        ranges: [], // Tableau pour stocker les tranches de dates
+        daysPerRange: 3,
+        configDPStart: {
+          enableTime: false,
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "D d M",
+        },
 
-      
-      
   } {{/* return */}}    
 }, {{/* data */}}
 
+
+{{/* ::: mounted */}}
 mounted () {
 
+
+  {{/*  ::: __date range  */}}
   datesRange: {
     // Trouver la première et la dernière date dans les données
     this.startDate = new Date(Math.min(
@@ -662,15 +633,19 @@ mounted () {
   };
 
   datesRepasGen: {
-    // Creer un tableau avec toutes les dateService, éliminer les doublon (Set). Défini le parametre `datesRepas` de `data()`, pour mettre en evidence dles date où il y a des évenement dans les date-picker; TODO : est-ce encore utile maintenant que les `allowed-dates` fonctionne bien ? doublon ? Ne creer pas les date intermédiare si il y a des trou =>
+    // Creer un tableau avec toutes les dateService, éliminer les doublon (Set). Défini le parametre `datesRepas` de `data()`, pour mettre en evidence les dateq où il y a des évenement dans les date-picker; TODO : est-ce encore utile maintenant que les `allowed-dates` fonctionne bien ? doublon ? Ne creer pas les date intermédiare si il y a des trou =>
     const dates = this.ingredients.map(i => {
       const datesFormat = i.dateService;
       return new Date(datesFormat).toISOString().substr(0, 10) // formatage
     });
 
     this.datesRepas = Array.from(new Set(dates)).sort(); 
-};
+  };
 
+  rangeDateEvents: {
+    this.splitDateRanges();
+
+  };
 
   endDateDebugGen: {
     /* Ajoute un jour a la endDateSelected, pour que les derniers jours soit bien pris en compte par le filtre opéré dans totalsIngredientFiltered.
@@ -679,8 +654,15 @@ mounted () {
     this.endDateSelectedDebug = new Date(lastDateSelected.setDate(lastDateSelected.getDate() + 1 )).toISOString().substr(0, 10);
   };
 
+  {{/*  ::: __flatpikr  */}}
+  datePickerInit: {
+    const datePicker = this.datePickerReset();
+  };
+
+
 }, // mounted() end
 
+{{/*  :::Computed  */}}
 
 computed: { 
 
@@ -695,33 +677,19 @@ computed: {
     });
   },
 
-  {{/*  DEBUG  */}}
-  testtotalsIngredientsFiltered: function() {
-    return this.totalsIngredientsFiltered('Autres')
-  },
-  testfilteredIngredients: function() {
-    return this.filteredIngredients('Autres')
-  },
-  testtotalsIngredients: function() {
-    return this.totalsIngredients(this.filteredIngredients('Autres'))
-  },
-  testtotalsIngredientsAll: function() {
-   const total = this.totalsIngredients(this.filteredIngredients('Autres'));
-   const element = this.filteredIngredients('Autres');
 
-  const result = new Set ([...element, ...total].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
-    
-    return result;
-  },
-
-
-  totalsIngredientsFrais3Days: function (){
+  {{/*  totalsIngredientsFrais3Days: function (){
     const totalsIngredientFiltered = totalsIngredientsFiltered(Frais)
-  },
+  },  */}}
+
+
+  
+  
+
 
 }, // computed end
 
-
+{{/*  ::: watch  */}}
 watch: {
 
   endDateSelected: function () {
@@ -734,7 +702,7 @@ watch: {
 
 }, // watch() end
 
-
+{{/*  ::: methods  */}}
 methods: { 
 
   showSection (el) {
@@ -778,9 +746,37 @@ methods: {
     sel[sel.selectedIndex].setAttribute("selected", "selected");
   },
 
+  {{/*  :::__Date picker reset  */}}
+  
   datesReset: function () {
     this.startDateSelected = this.startDate;
     this.endDateSelected = this.endDateAllowed;
+  },
+
+  datePickerReset() {
+ 
+    const configDPStart = {
+      enableTime: false,
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "D d M",
+      defaultDate: this.startDate,
+      minDate: this.startDate,
+      maxDate: this.endDateAllowed,
+    };
+    const configDPEnd = {
+      enableTime: false,
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "D d M",
+      defaultDate: this.endDateAllowed,
+      minDate: this.startDate,
+      maxDate: this.endDateAllowed,
+    };
+ 
+    flatpickr(datepickerStart, configDPStart);
+    flatpickr(datepickerEnd, configDPEnd);   
+   
   },
 
   computeQuantite: function (ingredient) {
@@ -806,14 +802,48 @@ methods: {
     return quantite / 1000;
   },
 
+  {{/*  ::: date split range   */}}
+  splitDateRanges() {
+      const { datesRepas, daysPerRange } = this;
+      let currentRange = [];
+
+      for (let i = 0; i < datesRepas.length; i++) {
+        if (currentRange.length === 0) {
+          currentRange.push(datesRepas[i]);
+        } else {
+          const currentDate = new Date(datesRepas[i]);
+          const previousDate = new Date(currentRange[currentRange.length - 1]);
+
+          const diffInDays = (currentDate - previousDate) / (1000 * 60 * 60 * 24);
+
+          if (diffInDays === 1) {
+            currentRange.push(datesRepas[i]);
+          } else {
+            // Si la différence n'est pas de 1 jour, cela signifie une nouvelle tranche
+            if (currentRange.length >= daysPerRange) {
+              this.ranges.push(currentRange);
+            }
+            currentRange = [datesRepas[i]];
+          }
+        }
+      }
+
+      // Ajoutez la dernière tranche s'il y a lieu
+      if (currentRange.length >= daysPerRange) {
+        this.ranges.push(currentRange);
+      }
+
+  },
 
 
-  
-{{/*  FIXIT  */}}
-
-  filteredIngredients: function (iType) {
+  {{/* ::: calculs des totaux des ingredients  */}}
+  filteredIngredients: function (iType, startDate, endDate) {
     // Récupérer la liste des ingrédients
     let ingredients = this.ingredients
+
+    // Si pas de valeurs definies, alors les dates sont celles du datepicker
+    var startDate = startDate === '' ? this.startDateSelected : startDate;
+    var endDate = endDate === '' ? this.endDateSelected : endDate;
 
     // Filtrer les ingrédients selon les critères spécifiés
     const filtered = ingredients.filter(
@@ -929,7 +959,6 @@ methods: {
     return result;
   },
 
-  {{/*  FIXIT ^^^  */}}
 
 
 
