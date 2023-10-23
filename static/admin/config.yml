@@ -560,7 +560,7 @@ collections:
         widget: "list"
         allow_add: true
         collapsed: false
-        summary: "{{fields.recettes_du_repas}}"
+        summary: "{{fields.date_service}} > {{fields.recettes_du_repas}}"
         hint: "Ajouter un menu pour un service"
 
         fields:
@@ -571,6 +571,7 @@ collections:
               date_format: "DD MMMM YYYY",
               time_format: false,
               hint: "Jour ou le repas sera servis...",
+              picker_utc: true,
             }
 
           - {
