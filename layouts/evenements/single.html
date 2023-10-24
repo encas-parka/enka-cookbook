@@ -15,6 +15,7 @@ rel="stylesheet">
 <!-- Liste qui contiendra qui contient les listes de recettes pour chaque date -->
 {{- $recettesList := slice -}}
 
+
 {{- $IngredientsTypesList := slice -}}
 {{- $recettesAll :=  dict -}}
 {{$recetteKey:= 1}}
@@ -344,12 +345,12 @@ rel="stylesheet">
             <div class="col-auto">
               <input id="datepickerStart" class="flatpickr flatpickr-input form-control me-2"
                 type="text" readonly="readonly" placeholder="Date de début" v-model="startDateSelected"
-                :config="configDPStart"></div>
+                ></div>
             <div class="col-auto">
               <input id="datepickerEnd" class="flatpickr flatpickr-input form-control" type="text"
-                readonly="readonly" placeholder="Date de fin" v-model="endDateSelected" :config="configDPEnd"></div>
+                readonly="readonly" placeholder="Date de fin" v-model="endDateSelected"></div>
             <div class="col">
-              <button class="btn btn-primary btn-sm shadow-sm text-white" @click="datePickerReset" type="button" id="btn-allDate">Toutes les dates</button>
+              <button class="btn btn-primary btn-sm shadow-sm text-white" @click="datesReset" type="button" id="btn-allDate">Toutes les dates</button>
             </div>
           </div>
         </div>
@@ -751,6 +752,11 @@ methods: {
   datesReset: function () {
     this.startDateSelected = this.startDate;
     this.endDateSelected = this.endDateAllowed;
+    const datePickerReset = this.datePickerReset2();
+  },
+
+  datePickerReset2() {
+    const configStart = this.$set(this.configDPStart, 'minDate', this.startDate )
   },
 
   datePickerReset() {
