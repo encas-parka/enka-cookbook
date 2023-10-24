@@ -1,11 +1,7 @@
 {{ define "main" }}
 
-<link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css"
-rel="stylesheet">
-
-{{/*  TODO : npm i flatpickr --save si ca marche  */}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{{ .Site.BaseURL }}flatpickr/flatpickr.js"></script>
+<link rel="stylesheet" href="{{ "flatpickr/flatpickr.css" | relURL }}">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"> 
 
@@ -89,14 +85,13 @@ rel="stylesheet">
 
 
 <div id="app">
-<v-app class="">
-  {{/*  lien vers le CMS de la page  */}}
+{{/*  lien vers le CMS de la page  */}}
   {{ $linkCMSPage := (path.Join "/admin/#/collections/evenement/entries/" (.Title | urlize)) }}
   <span class="text-end no-print p-2"><a target="_blank" rel="noopener noreferrer" href="{{$linkCMSPage}}/index">Modifier</a></span>
 
  
 
-{{/* ::: :: menu page */}}
+{{/* ::: _menu page */}}
 <div class="position-sticky top-0 z-9 no-print">
   <nav class="navbar navbar-expand-md navbar-light bg-light shadow py-2  rounded-bottom-4 border border-2 ">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarEvent"
@@ -126,7 +121,7 @@ rel="stylesheet">
 
 
 
-{{/* LES RECETTES   */}}
+{{/* ::: _LES RECETTES   */}}
 
     <div v-show="showedSection.includes('recettes') || printRecettes" :class="{ 'printonly' : !showedSection.includes('recettes')}">
       <h3 id="Recettes" class="no-print">Les {{len $recettesList}} recettes prévues pour l'événement "{{.Page.Title}}"</h3>
@@ -167,7 +162,7 @@ rel="stylesheet">
 </div>
 
 
-{{/*  LES RECETTES  */}}
+{{/* ::: ___ LES RECETTES cards  */}}
 
       {{ range sort $recettesList }}
       {{/*  variables  */}}
@@ -191,8 +186,8 @@ rel="stylesheet">
         </div>
           <div id="lesRecettes" class="card break-after avoid-break-inside my-4 p-2 bg-light bg-opacity-25 print-enlarge"  >
           <div class="card-body py-1 print-enlarge">
-            <div class="py-1">
-              <div :class="{'h2 my-2': $vuetify.breakpoint.mdAndUp ,'h4 my-1 py-0' : $vuetify.breakpoint.mdAndDown || !displayDetails }" id="{{ .recetteKey }}">{{ .recette }}
+            <div class="py-1h2 my-2">
+              <div class="my-2" id="{{ .recetteKey }}">{{ .recette }}
               {{ with .partof }}
               <span class="ms-3 fs-5">(pour : {{ . }})</span>
               {{ end }}
@@ -201,7 +196,7 @@ rel="stylesheet">
             </div>
             <div class="row">
               <div class="col">
-                <div :class="{'fw-semibold fs-5' : $vuetify.breakpoint.mdAndUp,} "> {{ .dateService | time.Format "Monday 2 January "}} - {{ .horaire }} - {{ .typePlat }}</div>
+                <div class="fw-semibold fs-5 "> {{ .dateService | time.Format "Monday 2 January "}} - {{ .horaire }} - {{ .typePlat }}</div>
                 <div class="">
                   <div class="print-fs-4 print-bold">Nombre de couverts: {{ .assiettes }}</div>
                   {{ if .chef }} 
@@ -237,7 +232,7 @@ rel="stylesheet">
         {{/*  LES INGREDIENTS  */}}
             <div id="lesIngredients" class="row" v-show="displayDetails">
               <div class="col-md-4 print-col-30-100">
-                <h5 :class="{'text-center ': $vuetify.breakpoint.smAndUp}">Ingrédients</h5>
+                <h5 class="text-center">Ingrédients</h5>
                 
                 {{/*  variable avant GetPage  */}}
                 {{- $assiettes:= (int .assiettes)  -}}
@@ -273,8 +268,6 @@ rel="stylesheet">
                                 {{ end }}
                               {{ else }}
                               {{ $quantiteRepas | lang.FormatNumber 2 }} {{ .unit }}
-                              
-                                
                               {{ end }}
 
                             {{ else }}
@@ -283,12 +276,9 @@ rel="stylesheet">
                               {{ math.Round $quantiteRepas }} {{.unit}}
                               {{ else }}
                               {{ $quantiteRepas | lang.FormatNumber 2 }} {{.unit}}
-                                
                               {{ end }}
                             {{ end }}
-                            
                           {{ end }}
-
                       </div>
                       {{ end }}
 
@@ -456,21 +446,15 @@ rel="stylesheet">
       </div>
     </div>
 </div>
-
-</v-app>
 </div> {{/* v-app end */}}
 
 
 <script nonce="6GwL6l4yhLQddbSv2ftKfX9sTqEkpYcmwyUPm5LEdgqF6VP27IUA5SLae8ScqZ171xC7gGVVZAOuYPJnsiUAzPadx4yFkdQ7GNHa" type="module" >
 
-  
-
   {{/*  ::: VueApp  */}}
   const app = new Vue ({
     delimiters: ['[[', ']]'],
     el: '#app',
-
-    vuetify: new Vuetify(),
     data () {
       return {
         search: '',
@@ -623,10 +607,7 @@ mounted () {
     this.endDate = new Date(this.endDate).toISOString().substr(0, 10);
 
     this.startDateSelected = this.startDate;
-
-    // Défini le derniers jour sélectionner par défaut (pour l'interval de date pris en compte dans le calcul des totaux). Il faut ajouter un jour supplémentaire à l'intervalle des date de repas, car sinon le dernier jour sélectionné n'est pas pris en compte (bug lié à vuetify ?) lors du filtre opéré par totalsIngredientFiltered. Donc, on reprend endDate comme lastDate, qu'on insere dans un `new Date` dans lequel on ajoute un jour, avant de reformater pour vuetify.
     this.endDateSelected = this.endDate
-
     // Derniere date autorisée dans la sélection (ne sera pas mutable puisque dans `mounted:`
     this.endDateAllowed = this.endDateSelected;
 
@@ -752,11 +733,7 @@ methods: {
   datesReset: function () {
     this.startDateSelected = this.startDate;
     this.endDateSelected = this.endDateAllowed;
-    const datePickerReset = this.datePickerReset2();
-  },
-
-  datePickerReset2() {
-    const configStart = this.$set(this.configDPStart, 'minDate', this.startDate )
+    const datePickerReset = this.datePickerReset();
   },
 
   datePickerReset() {
