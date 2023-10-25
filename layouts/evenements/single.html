@@ -260,7 +260,7 @@
   >
   <div class="card-body py-1 print-enlarge">
     <a class="btn btn-sm btn-outline-primary float-end no-print" 
-      @click="printThis('{{.recetteKey}}')" 
+      @click="printThis('{{.recetteKey}}', 'Recettes')" 
     >Imprimer</a>
     <div class="py-1h2 my-2">
       <div class="my-2 h2">{{ .recette }}
@@ -431,16 +431,28 @@
     </nav>
   
   {{/* ::: _Total INGREDIENTS   */}}
-  <div class="col  print-col-12" :class="{'no-print':!sectionsToPrint.includes('Ingrédients')}">
+  <div class="col  print-col-12" :class="{'no-print':!sectionsToPrint.includes('Ingredients')}">
     {{/*  TODO  */}}
     <div id="FraisByDay" class="">
   
     </div>
   
     {{ range sort $IngredientsTypesList "iType" "desc"}}
-    <div v-if="this.totalsIngredientsFiltered('{{.iType}}', 'ingredients').length > 0"
-      class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary">
+    <div 
+      v-if="this.totalsIngredientsFiltered('{{.iType}}', 'ingredients').length > 0"
+      class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary"
+      :class="{'no-print': !elementsToPrint.includes('id-{{.iType}}') && sectionsToPrint.includes('Ingredients')}"
+      id="id-{{.iType}}"
+
+      >
       <div class="card-body">
+        <div class="no-print">
+          <a 
+            class="btn btn-outline-secondary rounded btn-sm float-end text-muted" 
+            role="button"
+            @click="printThis('id-{{.iType}}', 'Ingredients')"
+            >Imprimer !</a>
+        </div>
         <div class="card-title h4 my-1"> Ingrédients {{ .iType }}
           <span v-if="startDate !== startDateSelected || endDate !== endDateSelected" class="fs-6 ms-2">
             - Du [[new Date (startDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long', day:
@@ -630,7 +642,7 @@
         displayDetails: true,
 
         {{/*  ::: ___Print parameters  */}}
-        sectionsToPrint: ['Recettes', "Ingrédients"],
+        sectionsToPrint: ['Recettes', "Ingredients"],
         elementsToPrint: [],
 
         printRecettes: true,
@@ -793,10 +805,10 @@ methods: {
     this.selectToPrint.push(el);
   },
 
-  printThis(el) {
+  printThis(el, section) {
     // mettre à jour les valeurs en utilisant $nextTick pour s'assurer que les changements sont appliqués
     this.$nextTick(() => {
-      this.sectionsToPrint = ["Recettes"];
+      this.sectionsToPrint = [section];
       this.elementsToPrint = [el];
       this.$nextTick(() => {
         // Différez l'impression en utilisant setTimeout
@@ -804,14 +816,7 @@ methods: {
       });
     });
   },
-  printThisRM(el) {
 
-      this.sectionsToPrint = ["Recettes"];
-      this.elementsToPrint = [el];
-    setTimeout(() => {
-      window.print();
-    }, 1000); 
-  },
 
   selectRecettesToPrint() {
     this.toPrint.recettes=true;
