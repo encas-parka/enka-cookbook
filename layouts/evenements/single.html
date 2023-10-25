@@ -2,8 +2,9 @@
 
 <script src="{{ .Site.BaseURL }}flatpickr/flatpickr.js"></script>
 <link rel="stylesheet" href="{{ "flatpickr/flatpickr.css" | relURL }}">
-
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"> 
+
+<iframe id="print-iframe" width="0" height="0"></iframe>
 
 <!-- Liste qui contiendra tous les ingrédients avec leurs données associés (quantité, recette, date, assietes...). Sert aux tableaux des quantités.  -->
 {{- $IngredientList := slice -}}
@@ -43,7 +44,7 @@
       "commentaire" .commentaire
       "partof" .partof
       )  -}}
-
+    {{/*  incrémentation des "id" unique des recettes  */}}
     {{$recetteKey = (add (float $recetteKey) 1)}}
 
     <!-- Reccupération des données sur les pages de chaque recettes -->
@@ -91,7 +92,7 @@
 
  
 
-{{/* ::: _menu page */}}
+{{/* ::: navbar page */}}
 <div class="position-sticky top-0 z-9 no-print">
   <nav class="navbar navbar-expand-md navbar-light bg-light shadow py-2  rounded-bottom-4 border border-2 ">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarEvent"
@@ -101,275 +102,355 @@
     <div class="collapse navbar-collapse" id="navbarEvent">
       <ul class="navbar-nav">
         <li class="nav-item p-1">
-          <button class="btn btn-primary shadow-sm" @click="showSection('recettes')"
-            :class="{ 'active': isActive === 'recettes' }">Recette</button>
+          <a href="#Recettes" class="btn btn-primary shadow-sm"
+            :class="{ 'active': isActive === 'recettes' }">Recettes</a>
         </li>
         <li class="nav-item p-1">
-          <button class="btn btn-primary shadow-sm" @click="showSection('ingredients')"
-            :class="{ 'active': isActive === 'ingredients' }">Ingrédient</button>
+          <a href="#TotalIngredients" class="btn btn-primary shadow-sm"
+            :class="{ 'active': isActive === 'ingredients' }">Ingrédients</a>
         </li>
       </ul>
       <ul class="navbar-nav ms-auto">
         <li class="nav-item p-1">
-          <button class="btn btn-primary shadow-sm" @click="printDialog = true">Impression / PDF</button>
+          <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalImpression"
+            aria-controls="modalImpression" @click="">
+            Impression / PDF
+          </button>
         </li>
       </ul>
     </div>
   </nav>
 </div>
 
+{{/*  ::: Impression - MODAL  */}}
+<div class="modal modal-xl fade d-print-none" tabindex="-1" id="modalImpression" aria-labelledby="modalImpressionLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class=" modal-content" >
+      <div class="modal-header">
+        <h5 class="modal-title fs-5" id="modalImpressionLabel">Imprimer / exporter en PDF</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
 
+        <div class="row">
+          <div class="col">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox"
+              v-model="toPrint.recettes"
+              name="radioPrintRecettes" id="radio-printRecettes">
+              <label class="form-check-label" for="radio-printRecettes">Imprimer les Recettes</label>
+            </div>
+            
+            <div class="form-check form-switch" v-show="toPrint.recettes">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                @click="selectRecettesToPrint"
+                id="cb-printSelectedRecettes">
+              <label class="form-check-label" for="cb-printSelectedRecettes">Selectionner les Recettes à imprimer</label>
+            </div>
+          </div>
+
+          <div class="col">
+            {{ range $recettesList }}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox"   
+                v-model="togglePrintRecettes[{{.recetteKey}}]"
+                id="cb-{{.recetteKey}}">
+                <label class="form-check-label small" for="cb-{{.recetteKey}}">{{.recette}} </label>
+              </div>
+            {{ end }}
+            
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="form-check">
+          <input class="form-check-input" type="radio" 
+          v-model="toPrint.ingredients" name="radioPrintIngredients" id="radio-printIngredient">
+          <label class="form-check-label" for="radio-printIngredient">Imprimer la liste de tous les ingrédients</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio"
+          
+          name="radioPrintIngredients" id="radio-printSelectedIngredient">
+          <label class="form-check-label" for="radio-printSelectedIngredient">Selectionner les listes d'ingrédients à imprimer</label>
+        </div>
+      
+      <hr>
+      <div class="text-end">
+        <a class="btn btn-primary btn-sm " @click="" role="button">Imprimer !</a>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 {{/* ::: _LES RECETTES   */}}
+<div :class="{}">
+  <h3 id="Recettes" class="no-print">Les {{len $recettesList}} recettes prévues pour l'événement "{{.Page.Title}}"</h3>
+  <div class="col-3 ms-auto">
+    <div class=" d-print-none p-2 ms-auto form-check form-switch">
+      <input class="form-check-input" type="checkbox" role="switch" id="switchDetailDisplay" v-model="displayDetails">
+      <label for="switchDetailDisplay" class="form-check-label">Afficher les détails</label>
+    </div>
+  </div>
 
-    <div v-show="showedSection.includes('recettes') || printRecettes" :class="{ 'printonly' : !showedSection.includes('recettes')}">
-      <h3 id="Recettes" class="no-print">Les {{len $recettesList}} recettes prévues pour l'événement "{{.Page.Title}}"</h3>
-          <div class="col-3 ms-auto">
-            <div class=" d-print-none p-2 ms-auto form-check form-switch"
-              >
-            <input class="form-check-input" type="checkbox" role="switch" id="switchDetailDisplay" v-model="displayDetails">
-            <label for="switchDetailDisplay" class="form-check-label">Afficher les détails</label>
-                    </div>
-          </div>
-
-    <div :class="{'no-print':!printRecettes}">
-
-
-
-<div class="no-print">
-  {{/*  Variable permettant de vérifier si les recettes sont de la meme date et du meme horaire ou pas; pour gérer leur affichage / l'organisation des recettes  */}}
-  {{ $dateService := "none"}}
-  {{ $horaire := "none" }}
-    <div class="card p-4 m-2">
-      <span class="fs-4">Sommaire</span>
-      {{- range $recettesList -}}
+  {{/* ::: _sommaire */}}
+  <div :class="{'no-print' : !sectionsToPrint.includes('Recettes')}">
+    <div class="no-print">
+      {{/* Variable permettant de vérifier si les recettes sont de la meme date et du meme horaire ou pas; pour gérer
+      leur
+      affichage / l'organisation des recettes */}}
+      {{ $dateService := "none"}}
+      {{ $horaire := "none" }}
+      <div class="card p-4 m-2">
+        <span class="fs-4">Sommaire</span>
+        {{- range $recettesList -}}
         <div class="">
           {{ if and (ne (.dateService | time.Format "Monday 2 January ") $dateService) }}
           <a href="#{{.dateService | time.Format "Monday 2 January" |urlize}}" class="fw-bolder">
             <slot name='{{.dateService | time.Format "Monday 2 January" | urlize}}'>{{.dateService | time.Format "Monday 2 January"}}</slot>
           </a>
           {{ end }}
-      
+
           <div class="ms-5">
-            <a href="#{{ .recetteKey }}"> <slot name="{{ .recetteKey }}"></slot>{{.recette }} → ({{.horaire}} - {{.typePlat}}) </a>
+            <a href="#{{ .recetteKey }}">
+              <slot name="{{ .recetteKey }}"></slot>{{.recette }} → ({{.horaire}} - {{.typePlat}})
+            </a>
           </div>
         </div>
-      {{ $dateService = (.dateService | time.Format "Monday 2 January ")}}
-      
-      {{end}}
+        {{ $dateService = (.dateService | time.Format "Monday 2 January ")}}
+
+        {{end}}
+      </div>
     </div>
+
+
+{{/*  ::: __Les intertitres jours  */}}
+{{ range sort $recettesList }}
+{{/*  variables  */}}
+
+<div class="no-print">
+  {{ if ne (.dateService | time.Format "Monday 2 January ") $dateService }}
+    <div class="h3 text-center card py-4 mx-6 bg-primary bg-opacity-10 fw-bolder"  id="{{.dateService | time.Format "Monday 2 January" |urlize}}">{{ .dateService | time.Format "Monday 2 January"}}</div>
+  {{ end }}
+  
+  {{ if ne .horaire $horaire }}
+    <div class="h4 text-center card py-3 mx-6 bg-light">{{ .horaire}} </div>
+  {{ end }}
+  
+  {{ $dateService = (.dateService | time.Format "Monday 2 January ")}}
+  {{ if eq (.dateService | time.Format "Monday 2 January ") $dateService }}
+    {{ $horaire = .horaire }}
+  {{ else }}
+    {{ $horaire = "" }}
+  {{ end }}
 </div>
 
+{{/* ::: __LES RECETTES cards */}}
 
-{{/* ::: ___ LES RECETTES cards  */}}
+{{/* TODO noprint */}}
+<div 
+  class="card break-after avoid-break-inside my-4 p-2 bg-light bg-opacity-25 print-enlarge"
+  id="{{.recetteKey}}"
+  :class="{ 'no-print': !elementsToPrint.includes('{{.recetteKey}}') && sectionsToPrint.includes('Recettes')}" 
+  >
+  <div class="card-body py-1 print-enlarge">
+    <a class="btn btn-sm btn-outline-primary float-end no-print" 
+      @click="printThis('{{.recetteKey}}')" 
+    >Imprimer</a>
+    <div class="py-1h2 my-2">
+      <div class="my-2 h2">{{ .recette }}
+        {{ with .partof }}
+        <span class="ms-3 fs-5">(pour : {{ . }})</span>
+        {{ end }}
+      </div>
+    </div>
 
-      {{ range sort $recettesList }}
-      {{/*  variables  */}}
-
-        <div class="no-print">
-          {{ if ne (.dateService | time.Format "Monday 2 January ") $dateService }}
-            <div class="h3 text-center card py-4 mx-6 bg-primary bg-opacity-10 fw-bolder"  id="{{.dateService | time.Format "Monday 2 January" |urlize}}">{{ .dateService | time.Format "Monday 2 January"}}</div>
-          {{ end }}
-          
-          {{ if ne .horaire $horaire }}
-            <div class="h4 text-center card py-3 mx-6 bg-light">{{ .horaire}} </div>
-          {{ end }}
-          
-          
-          {{ $dateService = (.dateService | time.Format "Monday 2 January ")}}
-          {{ if eq (.dateService | time.Format "Monday 2 January ") $dateService }}
-            {{ $horaire = .horaire }}
-          {{ else }}
-            {{ $horaire = "" }}
+    <div class="row">
+      <div class="col">
+        <div class="fw-semibold fs-5 "> {{ .dateService | time.Format "Monday 2 January "}} - {{ .horaire }} - {{
+          .typePlat }}</div>
+        <div class="">
+          <div class="print-fs-4 print-bold">Nombre de couverts: {{ .assiettes }}</div>
+          {{ if .chef }}
+          <div>Référent•es: {{ .chef }} - </div>
           {{ end }}
         </div>
-          <div id="lesRecettes" class="card break-after avoid-break-inside my-4 p-2 bg-light bg-opacity-25 print-enlarge"  >
-          <div class="card-body py-1 print-enlarge">
-            <div class="py-1h2 my-2">
-              <div class="my-2" id="{{ .recetteKey }}">{{ .recette }}
-              {{ with .partof }}
-              <span class="ms-3 fs-5">(pour : {{ . }})</span>
-              {{ end }}
-              </div>
-              
-            </div>
-            <div class="row">
-              <div class="col">
-                <div class="fw-semibold fs-5 "> {{ .dateService | time.Format "Monday 2 January "}} - {{ .horaire }} - {{ .typePlat }}</div>
-                <div class="">
-                  <div class="print-fs-4 print-bold">Nombre de couverts: {{ .assiettes }}</div>
-                  {{ if .chef }} 
-                    <div>R éférent•es: {{ .chef }} - </div>
-                  {{ end }}
-                 </div>
-                <div>
-                  {{- $url:= print .recette | urlize -}}
-                  {{- with site.GetPage $url -}}
-                    {{ if .Params.spécialité }}
-                      <div class="small">Spécialité : {{ .Params.spécialité }}</div>
-                    {{ end }}
-                  {{ end }}
-                  {{- $url:= print .recette | urlize -}}
-                  {{- with site.GetPage $url -}}
-    
-                </div>
-          
-              </div>
-              <div class="col text-end">
-                <div class="mb-2">{{ partial "content/badge-recette.html" . }}</div>
-                <div>
-                  {{ if .Params.materiel }}
-                  {{ range .Params.materiel }}
-                  <div class="badge bg-grey float-end me-1">{{ . }}</div>
-                  {{ end }}
-                  {{ end }}
-                </div>
-              </div>
-                {{ end }} {{/* with site.GetPage $url */}}
-            </div >
-              
-        {{/*  LES INGREDIENTS  */}}
-            <div id="lesIngredients" class="row" v-show="displayDetails">
-              <div class="col-md-4 print-col-30-100">
-                <h5 class="text-center">Ingrédients</h5>
-                
-                {{/*  variable avant GetPage  */}}
-                {{- $assiettes:= (int .assiettes)  -}}
-                {{- $url:= print .recette | urlize -}}
-                {{/*    */}}
-                
-                {{- with site.GetPage $url -}}
+        <div>
+          {{- $url:= print .recette | urlize -}}
+          {{- with site.GetPage $url -}}
+          {{ if .Params.spécialité }}
+          <div class="small">Spécialité : {{ .Params.spécialité }}</div>
+          {{ end }}
+          {{ end }}
+          {{- $url:= print .recette | urlize -}}
+          {{- with site.GetPage $url -}}
 
-                {{/*  Reccupération de la variable .Params.plate avec le range suivant, pour pouvoir l'utiliser dans le calcul des quantités correspondant au nombre d'assiete du repas  */}}
-                {{- $assiettesRecettes:= (int .Params.plate) -}}
-                
-                {{- range $key, $value := .Params.ingredients -}}
-                {{ with . }}
-                <div class="card my-2 pa-2 " outlined>
-                  <div class="row">
-                    <div class="col">
-                      <span class="">{{ $key | strings.FirstUpper }} </span>
-                      
-                      {{ range $index, $element := . -}}
-                      <div class="small">
-                      {{/*  Pour obtenir les quantité correspondant au nombres d'assiettes indiquées  */}}
-                          <span class="fw-bolder">{{ .title }}</span>
-                         
-                          {{ if .quantite }}
-                            {{ if or (eq .unit "Kg") (eq .unit "litre")}}
-                              : {{ $quantiteRepas := (float (div (mul (float .quantite) $assiettes ) $assiettesRecettes))}}
-                              {{ if lt $quantiteRepas 1}}
-                                {{ mul $quantiteRepas 1000 | math.Round }} 
-                                {{ if eq .unit "litre"}}
-                                  {{ printf "ml" }}
-                                {{ else if eq .unit "Kg"}}
-                                  {{ printf "g"}}
-                                {{ end }}
-                              {{ else }}
-                              {{ $quantiteRepas | lang.FormatNumber 2 }} {{ .unit }}
-                              {{ end }}
+        </div>
 
-                            {{ else }}
-                              : {{ $quantiteRepas :=  (div (mul (float .quantite) $assiettes ) $assiettesRecettes)}}
-                              {{ if gt $quantiteRepas 0.49 }}
-                              {{ math.Round $quantiteRepas }} {{.unit}}
-                              {{ else }}
-                              {{ $quantiteRepas | lang.FormatNumber 2 }} {{.unit}}
-                              {{ end }}
-                            {{ end }}
-                          {{ end }}
-                      </div>
+      </div>
+      <div class="col text-end">
+        <div class="mb-2">{{ partial "content/badge-recette.html" . }}</div>
+        <div>
+          {{ if .Params.materiel }}
+          {{ range .Params.materiel }}
+          <div class="badge bg-grey float-end me-1">{{ . }}</div>
+          {{ end }}
+          {{ end }}
+        </div>
+      </div>
+      {{ end }} {{/* with site.GetPage $url */}}
+    </div>
+      
+{{/* :::  ___LES INGREDIENTS  */}}
+    <div id="IngredientsRecettes" class="row" v-show="displayDetails">
+      <div class="col-md-4 print-col-30-100">
+        <h5 class="text-center">Ingrédients</h5>
+        
+        {{/*  variable avant GetPage  */}}
+        {{- $assiettes:= (int .assiettes)  -}}
+        {{- $url:= print .recette | urlize -}}
+        {{/*    */}}
+        
+        {{- with site.GetPage $url -}}
+
+        {{/*  Reccupération de la variable .Params.plate avec le range suivant, pour pouvoir l'utiliser dans le calcul des quantités correspondant au nombre d'assiete du repas  */}}
+        {{- $assiettesRecettes:= (int .Params.plate) -}}
+        
+        {{- range $key, $value := .Params.ingredients -}}
+        {{ with . }}
+        <div class="card my-2 p-2 " outlined>
+          <div class="row">
+            <div class="col">
+              <span class="">{{ $key | strings.FirstUpper }} </span>
+              
+              {{ range $index, $element := . -}}
+              <div class="small ps-2">
+              {{/*  Pour obtenir les quantité correspondant au nombres d'assiettes indiquées  */}}
+                  <span class="fw-bolder">{{ .title }}</span>
+                  {{/*  TODO : alergene parial  */}}
+                  {{ if .quantite }}
+                    {{ if or (eq .unit "Kg") (eq .unit "litre")}}
+                      : {{ $quantiteRepas := (float (div (mul (float .quantite) $assiettes ) $assiettesRecettes))}}
+                      {{ if lt $quantiteRepas 1}}
+                        {{ mul $quantiteRepas 1000 | math.Round }} {{/* XXX Retester */}}
+                        {{ if eq .unit "litre"}}
+                          {{ printf "ml" }}
+                        {{ else if eq .unit "Kg"}}
+                          {{ printf "gr."}}
+                        {{ end }}
+                      {{ else }}
+                      {{ $quantiteRepas | lang.FormatNumber 2 }} {{ .unit }}
                       {{ end }}
 
-                    </div>
-                  </div>
-                </div>
-                {{ end }}
-                {{ end }} {{/* range $key, $value := .Params.ingredients */}}
-          
-            
-              </div>
-          
-      {{/*  PREPARATION  */}}
-              <div class="col-md-8 print-col-70-100">
-                <h5 class="text-center">Préparation</h5>
-                <div class=" card card-body">
-                  {{ if .Params.preparation24h }}
-              <div class="card border border-danger mb-4 p-3 " >
-                  <p class="fs-5 fw-bold text-center print-fs-medium" >A prévoir à l'avance !</p>
-                  <div>{{ .Params.preparation24h | markdownify }}</div>
+                    {{ else }}
+                      : {{ $quantiteRepas :=  (div (mul (float .quantite) $assiettes ) $assiettesRecettes)}}
+                      {{ if gt $quantiteRepas 0.49 }}
+                      {{ math.Round $quantiteRepas }} {{.unit}}
+                      {{ else }}
+                      {{ $quantiteRepas | lang.FormatNumber 2 }} {{.unit}}
+                      {{ end }}
+                    {{ end }}
+                  {{ end }}
               </div>
               {{ end }}
-                  {{ .Params.preparation | markdownify }}
-                </div>
-          
-             
-              </div>
-                  {{ range .Params.astuces }}
-                  <div class="col-md-5 card card-body m-2 small ">
-                    Astuce: {{ .astuce }}
-                  </div>
-                  {{ end }}
-              {{ end }} {{/* with site.GetPage $url */}}
+
             </div>
           </div>
         </div>
-    {{ end }}
+        {{ end }}
+        {{ end }} {{/* range $key, $value := .Params.ingredients */}}
+  
+    
+      </div>
+          
+      {{/*  PREPARATION  */}}
+      <div class="col-md-8 print-col-70-100">
+        <h5 class="text-center">Préparation</h5>
+        <div class=" card card-body">
+          {{ if .Params.preparation24h }}
+      <div class="card border border-danger mb-4 p-3 " >
+          <p class="fs-5 fw-bold text-center print-fs-medium" >A prévoir à l'avance !</p>
+          <div>{{ .Params.preparation24h | markdownify }}</div>
+      </div>
+      {{ end }}
+          {{ .Params.preparation | markdownify }}
+        </div>
+  
+      
+      </div>
+          {{ range .Params.astuces }}
+          <div class="col-md-5 card card-body m-2 small ">
+            Astuce: {{ .astuce }}
+          </div>
+          {{ end }}
+      {{ end }} {{/* with site.GetPage $url */}}
+    </div>
+  </div>
+</div>
+{{ end }}
     </div>
 
   </div>
 
 <!--  -->
-<div class="container-fluid">
+<div class="py-5 no-print" id="TotalIngredients"><hr></div>
+<div class="container-fluid" >
   <div class="row justify-content-evenly">
 
-    {{/*  ::: __ Sidebar ingredients  */}}
+    {{/*  ::: _Sidebar Total ingredients  */}}
     <nav class="col-md-4 col-lg-3 d-md-block bg-light sidebar mt-7">
       <div class="sticky-top" style="top: 10%">
     
-        <div class="row-auto">
-         <div class="input-group" id="datePicker">
-            <label for="datePicker">Selectionner la période  que vous souhaitez prendre en compte</label>
-    
-            <div class="col-auto">
-              <input id="datepickerStart" class="flatpickr flatpickr-input form-control me-2"
+        <div class="my-5">
+         <div class="mb-3">
+            <label class="mb-2">Selectionner la période  que vous souhaitez prendre en compte</label>
+            <div class="mb-3">
+              <input id="datepickerStart" class="flatpickr flatpickr-input form-control"
                 type="text" readonly="readonly" placeholder="Date de début" v-model="startDateSelected"
                 ></div>
-            <div class="col-auto">
+            <div class="mb-3">
               <input id="datepickerEnd" class="flatpickr flatpickr-input form-control" type="text"
                 readonly="readonly" placeholder="Date de fin" v-model="endDateSelected"></div>
-            <div class="col">
-              <button class="btn btn-primary btn-sm shadow-sm text-white" @click="datesReset" type="button" id="btn-allDate">Toutes les dates</button>
+          
+              <div class="mb-3 text-end">
+                <button class="btn btn-primary btn-sm shadow-sm text-white" @click="datesReset" type="button" id="btn-allDate">Toutes les dates</button>
+              </div>
+            </div>
+            <hr>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" v-model="showAllRow" id="checkRecipeDetail">
+              <label for="checkRecipeDetail">Afficher les recettes pour chaque ingrédient</label>
             </div>
           </div>
         </div>
-        <div>
-          <input type="checkbox" class="form-control" v-model="showAllRow">
-        </div>
-      </div>
     </nav>
   
-  {{/* ::: LISTE des INGREDIENTS   */}}
-  
-      <div class="col p-lg-4 print-col-12" :class="{'no-print':!printIngredients}">
-  
+  {{/* ::: _Total INGREDIENTS   */}}
+  <div class="col  print-col-12" :class="{'no-print':!sectionsToPrint.includes('Ingrédients')}">
+    {{/*  TODO  */}}
     <div id="FraisByDay" class="">
   
     </div>
   
-      {{ range sort $IngredientsTypesList "iType" "desc"}}
-          <div v-if="this.totalsIngredientsFiltered('{{.iType}}', 'ingredients').length > 0" class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary">
-            <div class="card-body">
-              <div class="card-title h4 my-1"> Ingrédients {{ .iType }}
-                <span
-                v-if="startDate !== startDateSelected || endDate !== endDateSelected" class="fs-6 ms-2">
-                    - Du [[new Date (startDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long', day: 'numeric'})]] au [[new Date (endDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long', day: 'numeric'})]]
-                </span>
-            </div>
+    {{ range sort $IngredientsTypesList "iType" "desc"}}
+    <div v-if="this.totalsIngredientsFiltered('{{.iType}}', 'ingredients').length > 0"
+      class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary">
+      <div class="card-body">
+        <div class="card-title h4 my-1"> Ingrédients {{ .iType }}
+          <span v-if="startDate !== startDateSelected || endDate !== endDateSelected" class="fs-6 ms-2">
+            - Du [[new Date (startDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long', day:
+            'numeric'})]] au [[new Date (endDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long',
+            day: 'numeric'})]]
+          </span>
+        </div>
   
   
-            {{/* ::: Table avec Details des recettes  */}}
+            {{/* ::: __Table avec Details des recettes  */}}
   
             <table class="table table-bordered-bottom table-responsive" v-if="showAllRow" :class="{'no-print':!printIngredientsSimple}">
               <thead>
@@ -406,7 +487,7 @@
               </tbody>
             </table>
   
-            {{/* ::: Table Sans Details des recettes */}}
+            {{/* ::: __Table Sans Details des recettes */}}
             <table class="table table-bordered-bottom" v-if="!showAllRow" :class="{'no-print':!printIngredients}">
               <thead>
                 <tr>
@@ -548,25 +629,36 @@
 
         displayDetails: true,
 
-        select: ['Recettes', "Ingrédients"],
-        printable: [
-          'Recettes',
-          'Ingrédients',
-          {{/*  'Affiches'  */}}
-        ], 
+        {{/*  ::: ___Print parameters  */}}
+        sectionsToPrint: ['Recettes', "Ingrédients"],
+        elementsToPrint: [],
 
         printRecettes: true,
         printIngredients: true,
+        noprintThis: [],
+
+        {{/*  USELESS  */}}
         printIngredientsSimple: true,
         printIngredientsDetailed: false,
         printIngredientsRowSup1: true,
         printIngredientsRowSup2: true,
 
+        toPrint: {
+          recettes: true,
+          ingredients: true,
+          ingredientsDetail: false,
+          {{ range $recettesList }}
+            {{ .recettesKey }}: true,
+          {{ end }}
+        },
+
+        
+
         {{/*  printAffiches: false,  */}}
 
         printDialog: false,
           {{/*  TEST : reinclure : 'recettes'  */}}
-        showedSection: ['ingredients'],
+        showedSection: ['recettes', 'ingredients'],
         isActive : null,
         IngredientsTypesList: [{{ range $IngredientsTypesList }} {{ .iType }}, {{ end }} ],
       
@@ -578,6 +670,7 @@
           altInput: true,
           altFormat: "D d M",
         },
+
 
   } {{/* return */}}    
 }, {{/* data */}}
@@ -693,20 +786,60 @@ methods: {
     window.scrollTo(0, 200);
   },
 
+
+  {{/*  ::: __print  */}}
+  {{/*  USELESS : faire le tri  */}}
   printSection (el) {
-    this.select.push(el)
+    this.selectToPrint.push(el);
+  },
+
+  printThis(el) {
+    // mettre à jour les valeurs en utilisant $nextTick pour s'assurer que les changements sont appliqués
+    this.$nextTick(() => {
+      this.sectionsToPrint = ["Recettes"];
+      this.elementsToPrint = [el];
+      this.$nextTick(() => {
+        // Différez l'impression en utilisant setTimeout
+          window.print();
+      });
+    });
+  },
+  printThisRM(el) {
+
+      this.sectionsToPrint = ["Recettes"];
+      this.elementsToPrint = [el];
+    setTimeout(() => {
+      window.print();
+    }, 1000); 
+  },
+
+  selectRecettesToPrint() {
+    this.toPrint.recettes=true;
+    
+  },
+
+  togglePrintRecettes (id) {
+    if (!this.selectToPrint.includes(id)) {
+      this.selectToPrint.push(id); 
+    }
+    else {
+      const index = this.selectToPrint.indexOf(id);
+      if (index !== -1) {
+        this.selectToPrint.splice(index, 1);
+      }
+    }
   },
 
   printableElements() {
-    if (this.select.includes('Recettes')) {
+    if (this.selectToPrint.includes('Recettes')) {
       this.printRecettes = true;
     } else {this.printRecettes = false}
 
-    if (this.select.includes('Ingrédients')) {
+    if (this.selectToPrint.includes('Ingrédients')) {
       this.printIngredients = true;
     } else {this.printIngredients = false}
 
-    {{/*  if (this.select.includes('Affiches')) {
+    {{/*  if (this.selectToPrint.includes('Affiches')) {
       this.printAffiches = true;
     } else {this.printAffiches = false}  */}}
   },
@@ -716,6 +849,7 @@ methods: {
     window.print();
   },
 
+  {{/*  USELESS . C'est quoi ? Pas de reference  */}}
   updateSelectedAttribute (e) {
     let sel, i;
 
