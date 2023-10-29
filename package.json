@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "decap-server": "^3.0.1",
-    "prettier": "^3.0.3",
-    "prettier-plugin-go-template": "^0.0.15"
+    "prettier": "^2.0.0",
+    "prettier-plugin-go-template": "0.0.13"
   }
 }
