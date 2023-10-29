@@ -28,8 +28,6 @@
   {{- range .recettes_du_repas -}}
   <!--::: Creation des variables qui ne seront plus visible au prochain scope. Nous sommes dans les params de 1er niveau des recettes -->
     {{- $recette:=.recette -}}
-    {{- $recetteKey := .recetteKey -}}
-      {{$recetteKey = (add (int $recetteKey) 1)}}
     {{- $typePlat:=.type_plat -}}
     {{/*  Si un nombre de couverts alternatif a été déclaré pour ce plat en particulier, on substitue...  */}}
     {{ if .altAssiettes }}
@@ -182,6 +180,13 @@
              id="cb-noprintIngredient">
              <label class="form-check-label" for="cb-noprintIngredient">Ne pas imprimer les listes d'ingrédients</label>
            </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" v-model="showAllColIngredients" id="checkRecipeDetail">
+            <label for="checkRecipeDetail">Afficher les recettes pour chaque ingrédient</label>
+          </div>
+           <div class="mt-3 row">
+            
+            <div class="col-auto">
 
         <div v-show="toPrint.ingredients" class="card card-body">
         
@@ -241,7 +246,6 @@
     </div>
   </div>
 
-  <div :class="{'no-print' : !toPrint.recettes}">
   {{/* ::: _sommaire */}}
     <div class="no-print">
       {{/* Variable permettant de vérifier si les recettes sont de la meme date et du meme horaire ou pas; pour gérer leur affichage / l'organisation des recettes */}}
@@ -281,6 +285,22 @@
 
 {{/*  ::: __Les intertitres jours  */}}
 {{ range sort $recettesList }}
+  <div class="no-print" id=>
+    {{ if and ( ne (.dateService | time.Format "Monday 2 January ") $dateService )}}
+      <div class="h3 text-center card py-4 mx-6 bg-primary bg-opacity-10 fw-bolder"  id="{{.dateService | time.Format "Monday 2 January" |urlize}}">{{ .dateService | time.Format "Monday 2 January"}}</div>
+    {{ end }}
+    
+    {{ if ne .horaire $horaire }}
+      <div class="h4 text-center card py-3 mx-6 bg-light">{{ .horaire}} </div>
+    {{ end }}
+    
+    {{ $dateService = (.dateService | time.Format "Monday 2 January ")}}
+    {{ if eq (.dateService | time.Format "Monday 2 January ") $dateService }}
+      {{ $horaire = .horaire }}
+    {{ else }}
+      {{ $horaire = "" }}
+    {{ end }}
+  </div>
   <div class="no-print">
     {{ if and ( ne (.dateService | time.Format "Monday 2 January ") $dateService )}}
       <div class="h3 text-center card py-4 mx-6 bg-primary bg-opacity-10 fw-bolder"  id="{{.dateService | time.Format "Monday 2 January" |urlize}}">{{ .dateService | time.Format "Monday 2 January"}}</div>
@@ -517,7 +537,7 @@
             <div class="col">
               <span class="">{{ $key | strings.FirstUpper }} </span>
               
-{{ range $index, $element := . -}}
+              {{ range $index, $element := . -}}
               <div class="small ps-2">
               
 
@@ -529,7 +549,7 @@
 
                   {{/* TODO : alergene parial */}}
                   {{ if .quantite }}
-                                      {{ if or (eq .unit "Kg") (eq .unit "litre")}}
+                    {{ if or (eq .unit "Kg") (eq .unit "litre")}}
                       : {{ $quantiteRepas := (float (div (mul (float .quantite) $assiettes ) $assiettesRecettes))}}
                       {{ if lt $quantiteRepas 1}}
                         {{ mul $quantiteRepas 1000 | math.Round }} {{/* XXX Retester */}}
@@ -552,7 +572,7 @@
                     {{ end }}
                     {{ end }}
               </div>
-{{ end }}
+              {{ end }}
 
             </div>
           </div>
