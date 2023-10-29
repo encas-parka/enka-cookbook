@@ -8,22 +8,22 @@
 
 {{ if or (eq .Type "evenements") (eq .Type "recettes") }}
 
-{{ if hugo.IsProduction }}
-  {{ $vuejs := resources.Get "js/vendor/vue.min.js" | resources.Fingerprint "sha512" }}
-  <script src="{{- $vuejs.Permalink -}}" integrity="{{ $vuejs.Data.Integrity }}"></script>
+  {{ if hugo.IsProduction }}
+    {{ $vuejs := resources.Get "js/vendor/vue.min.js" | resources.Fingerprint "sha512" }}
+    <script src="{{- $vuejs.Permalink -}}" integrity="{{ $vuejs.Data.Integrity }}"></script>
 
-  {{ $vuetify := resources.Get "js/vendor/vuetify.min.js" | resources.Fingerprint "sha512" }}
-  <script src="{{- $vuetify.Permalink -}}" integrity="{{ $vuetify.Data.Integrity }}"></script>
-{{ end }}
+    {{ $vuetify := resources.Get "js/vendor/vuetify.min.js" | resources.Fingerprint "sha512" }}
+    <script src="{{- $vuetify.Permalink -}}" integrity="{{ $vuetify.Data.Integrity }}"></script>
+  {{ end }}
 
-{{ if not hugo.IsProduction }}
-  {{ $vuejs := resources.Get "js/vendor/vue.common.dev.js" | resources.Fingerprint "sha512" }}
-  <script src="{{- $vuejs.Permalink -}}" integrity="{{ $vuejs.Data.Integrity }}"></script>
+  {{ if not hugo.IsProduction }}
+    {{ $vuejs := resources.Get "js/vendor/vue.common.dev.js" | resources.Fingerprint "sha512" }}
+    <script src="{{- $vuejs.Permalink -}}" integrity="{{ $vuejs.Data.Integrity }}"></script>
 
-  {{ $vuetify := resources.Get "js/vendor/vuetify.js" | resources.Fingerprint "sha512" }}
-  <script src="{{- $vuetify.Permalink -}}" integrity="{{ $vuetify.Data.Integrity }}"></script>
-{{ end }}
-
+    {{ $vuetify := resources.Get "js/vendor/vuetify.js" | resources.Fingerprint "sha512" }}
+    <script src="{{- $vuetify.Permalink -}}" integrity="{{ $vuetify.Data.Integrity }}"></script>
+  {{ end }}
+  
 {{ end }}
 
 

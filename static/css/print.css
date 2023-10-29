@@ -8,11 +8,14 @@
 
 @media print {
 
-  // ::: Custom print classes
 
-  .no-print {
-      display: none
-    }
+ .print-enlarge { 
+    border: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+
 
   // Pour définir des colonnes pour l'impression (les annuler ou les creer)
   .print-col-12 {
@@ -32,19 +35,30 @@
 
   .print-td-20 {
     table-layout: fixed;
-    width: 20% !important ;
+    width: 20%;
   }
 
   .print-td-15 {
     table-layout: fixed;
-    width: 15% !important ;
+    width: 15%;
+  }
+
+  .print-td-mw-15 {
+    table-layout: fixed;
+    max-width: 15%;
   }
 
   .print-75p100 {
     font-size: 75% !important;
   }
 
-  // Font Size
+  // 
+
+  .print-border-1 {
+    border: solid 1px ;
+  }
+
+// Font Size
   .print-fs-small {
     font-size: small !important;
   }
@@ -55,36 +69,29 @@
 
   .print-fs-medium {
     font-size: medium !important;
-  }
-
+    }
+  
   .print-fs-large {
     font-size: large !important;
-  }
+    }
 
   .print-fs-4 {
     font-size: 1.3em !important;
-  }
+   }
 
   .print-bold {
     font-weight: 600;
   }
 
-  .print-enlarge {
-    border: 0;
-    margin: 0;
-    padding: 0;
+  print-mw-10 {
+    max-width: 10%
   }
 
-  // ::: OVERIDE
+  // Suppression des marges et pading
+
   .content {
     padding: 0 !important;
 
-  }
-
-
-  .card {
-    border-color: black !important;
-    box-shadow: none ! important
   }
 
   head,
@@ -565,8 +572,8 @@
   h4,
   h5,
   h6 {
-    // page-break-after: avoid;
-    // page-break-inside: avoid;
+    page-break-after: avoid;
+    page-break-inside: avoid;
     text-align: center;
   }
 
@@ -634,6 +641,9 @@
     page-break-inside: avoid
   }
 
+  .no-print {
+    display: none
+  }
 
   a.no-reformat:after {
     content: ''
@@ -692,6 +702,40 @@
     border-color: #dee2e6;
   }
 
+  // Vuetify custom
+
+  .v-data-table>.v-data-table__wrapper>table>tbody>tr>td,
+  .v-data-table>.v-data-table__wrapper>table>tfoot>tr>td,
+  .v-data-table>.v-data-table__wrapper>table>thead>tr>td,
+  .v-data-table--dense>.v-data-table__wrapper>table>tbody>tr>th,
+  .v-data-table--dense>.v-data-table__wrapper>table>tfoot>tr>th,
+  .v-data-table--dense>.v-data-table__wrapper>table>thead>tr>th {
+    font-size: .75rem !important;
+    height: 1cm !important;
+    border: 1px solid black;
+    padding: 2px, 12px !important;
+    line-height: 1.125;
+  }
+
+  .v-application * {
+    box-shadow: none !important;
+  }
+
+
+
+
+
+  .card {
+    border-color: black !important;
+    box-shadow: none ! important
+  }
+
+ 
+
+
   
+
+
+
 
 }
