@@ -3,6 +3,13 @@ draft: false
 title: Demo
 sitemap_exclude: true
 repas:
+  - assiettes: 100
+    date_service: 2023-05-06T11:15:24.741Z
+    recettes_du_repas:
+      - recette: "Pois cassé - oignon caramélisé "
+        type_plat: dessert
+        altAssiettes: 5004
+    horaire: soir
   - assiettes: 95
     date_service: 2023-05-01T11:18:26.552Z
     horaire: soir

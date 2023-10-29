@@ -5,6 +5,7 @@ backend:
   branch: deployed
   # branch: master # Branch to update (optional; defaults to master)
   open_authoring: true #Permettre un PR sur github sans l'acces aux dépot
+  squash_merges: true  #XXX : Vérifier si ca marche bien : si un article est modifier plusieur avant d'etre mergé/publié, un seul commit avec rebased.
 
 # when using the default proxy server port
 # for local cms developpement.
@@ -29,13 +30,16 @@ editor:
 # Pour limiter le nombre de requete a l'api github → false
 # search: false
 
+# ::: Collection Recettes
+
 collections:
   - name: "recettes"
     label: "Recettes"
+    hint: "Attention à ne pas utiliser un nom de recette déjà existant (si c'était le cas, la PAGE N'EXISTERA pas sur le site...). Si vous modifier le titre alors que la recette est déjà utilisé dans un évenement, la page de l'evenement ne FONCTIONNERA PLUS correctement. Il vous faudra éditer la page de l'évenement pour indiquer le nouveau titre de la recette.  "
     label-singular: "Recette"
     folder: "content/recettes/"
     path: "{{type}}/{{slug}}/index"
-    slug: "{{title}}-{{year}}-{{month}}-{{day}}-{{hour}}{{minute}}{{second}}"
+    slug: "{{title}}"
     filter: { field: "layout", value: "recettes" }
     description: "Liste de l'ensemble des recettes"
     view_filters:
@@ -70,6 +74,7 @@ collections:
     fields:
       - { label: "Intitulé", name: "title", widget: "string" }
       # - {label: 'Brouillon', name: 'draft', widget: 'boolean', default: false}
+      - { name: "slug",  widget: "hidden", default: }
       - {
           label: "Image",
           name: "img",
@@ -111,7 +116,7 @@ collections:
         widget: "string"
         required: false
 
-        ## Description ##
+        ## ::: __Description ##
 
       - {
           label: "Régimes",
@@ -165,7 +170,7 @@ collections:
         required: false
 
       ################################
-      ## Ingredients de la recette ##
+      ## ::: __Ingredients de la recette ##
 
       - label: "Ingredients"
         name: "ingredients"
@@ -540,7 +545,7 @@ collections:
   ################################
   ################################
 
-  # COLLECTION Menu / Evenements
+  # ::: COLLECTION Menu / Evenements
 
   - label: "Evenements"
     label-singular: "Evenement"
@@ -549,9 +554,8 @@ collections:
     folder: content/evenements/
     path: "{{slug}}/index"
     create: true
-
     fields:
-      - { label: "Nom de l'évènement", name: "title", widget: "string" }
+      - { label: "Nom de l'évènement", name: "title", widget: "string", hint: "Attention à ne pas utiliser un nom d'évenement déjà existant (si c'était  le cas, la page n'existera pas sur le site...)" }
 
       - { name: "sitemap_exclude", widget: "hidden", default: "true" }
 
@@ -559,6 +563,7 @@ collections:
         name: "repas"
         widget: "list"
         allow_add: true
+        add_to_top: true
         collapsed: false
         summary: "{{fields.date_service}} > {{fields.recettes_du_repas}}"
         hint: "Ajouter un menu pour un service"
@@ -570,8 +575,8 @@ collections:
               widget: "datetime",
               date_format: "DD MMMM YYYY",
               time_format: false,
-              hint: "Jour ou le repas sera servis...",
-              picker_utc: true,
+              hint: "Jour ou le repas sera servis..",
+              picker_utc: false,
             }
 
           - {
@@ -660,7 +665,7 @@ collections:
 
   ################################
 
-  # COLLECTION : Materiel
+  # ::: COLLECTION : Materiel
 
   - label: "Materiel"
     name: "materiel"
@@ -679,7 +684,7 @@ collections:
 
   ###########################
 
-  # Categories
+  # ::: Categories collections
   - label: "sous-catégorie (recettes)"
     name: "sous-categories"
     folder: content/categories/
@@ -691,6 +696,7 @@ collections:
       - { label: "Nom", name: "title", widget: "string" }
 
   ###########################
+  #  ::: ingredient collections
 
   - name: "ingredients_index"
     label: "Ingrédients"

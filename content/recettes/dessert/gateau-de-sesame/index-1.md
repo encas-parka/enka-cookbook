@@ -1,17 +1,18 @@
 ---
 draft: false
-title: "Gateau de sésame "
+title: Gateau de sésame TEST
 description: "Gâteau au Sésame noir et chocolat "
 layout: recettes
 type: dessert
 categories:
   - Gateau
+auteur: Duplicata
 regime:
   - vegetarien
 cuisson: Oui
 temperature: Chaud
 plate: 150
-check: Non
+check: Oui
 ingredients:
   lof:
     - title: Crème liquide
@@ -60,5 +61,5 @@ preparation: >-
     * Faire chauffer la crème liquide. 
     * Dans un saladier, verser la crème très chaude sur les carreaux de chocolat. 
   * Enfin, glacer les gâteaux!
-publishDate: 2023-04-27T09:32:43.801Z
+publishDate: 2023-10-27T12:36:37.535Z
 ---

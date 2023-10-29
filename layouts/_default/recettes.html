@@ -7,10 +7,10 @@
 {{- end -}}
 
 {{/* Reccupération des donnée ingredient alergene */}}
-  {{ $alergene := slice }}
-  {{ $lactose := slice }}
-  {{ $gluten := slice }}
-  {{ $novegan := slice }}
+{{ $alergene := slice }}
+{{ $lactose := slice }}
+{{ $gluten := slice }}
+{{ $novegan := slice }}
 
   {{- range $.Site.Data.ingredients -}}
     {{- with .ingredients -}}
@@ -32,21 +32,21 @@
     {{- end -}}
   {{- end -}}
   
-  {{ $ingredients := slice }}
+{{ $ingredients := slice }}
 
-  {{- range $key, $value := .Params.ingredients  -}}
-    {{- with . -}}
-      {{- range $index, $element := . -}}
-       {{ $ingredients = $ingredients | append .title}}
-      {{- end }}
-    {{- end -}} {{/* with */}} 
-  {{- end -}} 
+{{- range $key, $value := .Params.ingredients  -}}
+{{- with . -}}
+  {{- range $index, $element := . -}}
+    {{ $ingredients = $ingredients | append .title}}
+  {{- end }}
+{{- end -}} {{/* with */}} 
+{{- end -}} 
 
-  {{- $alergeneRecette := intersect $alergene $ingredients  -}}
-  {{- $glutenRecette := intersect $gluten $ingredients  -}}
-  {{- $lactoseRecette := intersect $lactose $ingredients  -}}
-  {{- $noveganRecette := intersect $novegan $ingredients  -}}
-  
+{{- $alergeneRecette := intersect $alergene $ingredients  -}}
+{{- $glutenRecette := intersect $gluten $ingredients  -}}
+{{- $lactoseRecette := intersect $lactose $ingredients  -}}
+{{- $noveganRecette := intersect $novegan $ingredients  -}}
+
 
 {{/*  */}}
 
@@ -160,10 +160,12 @@
       {{- range $key, $value := .Params.ingredients  -}}
         {{- with . -}}
         <div class="card my-2 p-2 " outlined>
-              <span class="fw-bold text-center">{{ $key | strings.FirstUpper }} </span>
+              <span class="fw-bold mb-1">{{ $key | strings.FirstUpper }} </span>
               
               {{- range $index, $element := . -}} 
-                {{ partial "components/ingredients" (dict "title" .title "quantite" .quantite "unit" .unit "alergene" $alergene  ) }}
+                <div class="small ps-2">
+               {{ partial "components/ingredients" (dict "title" .title "quantite" .quantite "unit" .unit "alergene" $alergene  ) }}
+              </div>
               {{end}}
         </div>
        {{- end -}} {{/* with */}} 
