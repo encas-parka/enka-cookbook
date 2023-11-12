@@ -22,8 +22,19 @@
   <!-- Creation des variables qui ne seront plus visible au prochain scope. Nous sommes dans les params de l'Evenement -->
   {{- $dateService:=.date_service -}}
   {{- $horaire:=.horaire -}}
-  {{- $assiettes:= (int .assiettes)  -}}
+  
+  {{/*  Modifier l'heure de la date ISO en fonction du parametre $horaire (non défini par l'utilisateur) afin de permettre le tri par date des recettes.  */}}
+    {{ if eq $horaire "matin" }}
+      {{ $dateService = $dateService | replaceRE "T\\d{2}:\\d{2}:\\d{2}" "T08:00:00" }}
+    {{ else if eq $horaire "midi" }}
+      {{ $dateService = $dateService | replaceRE "T\\d{2}:\\d{2}:\\d{2}" "T12:00:00" }}
+    {{ else if eq $horaire "soir" }}
+      {{ $dateService = $dateService | replaceRE "T\\d{2}:\\d{2}:\\d{2}" "T20:00:00" }}
+    {{ end }}
     
+    {{- $assiettes:= (int .assiettes)  -}}
+
+
   <!--  -->
   {{- range .recettes_du_repas -}}
   <!--::: Creation des variables qui ne seront plus visible au prochain scope. Nous sommes dans les params de 1er niveau des recettes -->
@@ -161,7 +172,7 @@
            <div class="form-check">
              <input
              class="form-check-input"
-             type="radio"
+             type="checkbox"
              v-model="toPrint.ingredients"
              :value="true"
              name="cb-ing"
@@ -170,16 +181,7 @@
              <label class="form-check-label"
              for="cb-printIngredient">Imprimer les listes des ingrédients</label>
            </div>
-           <div class="form-check">
-             <input
-             class="form-check-input"
-             type="radio"
-             v-model="toPrint.ingredients"
-             :value="false"
-             name="cb-ing"
-             id="cb-noprintIngredient">
-             <label class="form-check-label" for="cb-noprintIngredient">Ne pas imprimer les listes d'ingrédients</label>
-           </div>
+          
 
         <div v-show="toPrint.ingredients" class="card card-body">
         
@@ -247,9 +249,9 @@
       <div class="card p-4 m-2">
         <span class="fs-4">Sommaire</span>
       
-        {{- range $recettesList -}}
+        {{- range sort $recettesList ".dateService" -}}
 
-        <div class="">
+        <div>
 
           {{ if and (ne (.dateService | time.Format "Monday 2 January ") $dateService) }}
 
@@ -275,7 +277,7 @@
 
 
 {{/*  ::: __Les intertitres jours  */}}
-{{ range sort $recettesList }}
+{{ range sort $recettesList ".dateService" }}
   <div class="no-print">
     {{ if and ( ne (.dateService | time.Format "Monday 2 January ") $dateService )}}
       <div class="h3 text-center card py-4 mx-6 bg-primary bg-opacity-10 fw-bolder"  id="{{.dateService | time.Format "Monday 2 January" |urlize}}">{{ .dateService | time.Format "Monday 2 January"}}</div>
@@ -342,11 +344,13 @@
   id="recetteID{{$recetteKey}}"
   :class="{ 'no-print': !toPrint.recetteID{{$recetteKey}} }"
   >
-  
   <div class="card-body py-1 print-enlarge">
-    <a class="btn btn-sm btn-outline-primary float-end no-print" 
+    <a class="btn btn-sm btn-outline-primary float-end no-print mx-1" 
     @click="printThis('recetteID{{$recetteKey}}', 'recettesSection')" 
-    >Imprimer</a>
+    > {{ partial "inline-svg" (dict "src" "fonticons/printer"  "fs" 3) }} </a>
+    <a class="btn btn-sm btn-outline-primary float-end no-print mx-1" 
+    href="{{.RelPermalink}}"
+    > {{ partial "inline-svg" (dict "src" "fonticons/box-arrow-in-right"  "fs" 3) }} </a>
     <div id="titreRecette" class="py-1h2 my-2">
       <div class="my-2 h2">{{ $recette }}
         {{ if $partof }}
@@ -385,8 +389,8 @@
       </div>
      
  
-     
-      {{/* ::: initialisation des variables check */}}
+     {{/*  ::: ___Alertes  */}}
+      {{/*  initialisation des variables check */}}
       {{- $assiettesInit := .Params.plate -}}
 
       {{- $isCheck := false -}} {{- $checkfor := "" -}} {{- $checkYes := false -}}
@@ -414,81 +418,117 @@
       {{- end -}}
     {{- end -}}
 
-    {{ if $alertQuantite }}
-    <div class="col-12 col-md-6 col-lg-6 col-xl-6">
-      <div class="card border-danger shadow">
-        <div class="card-body small">
-          {{ if not $checkYes }}
-          <p> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-circle" "display" "inline" "fs" 4) }}
-            Le nombre de couverts prévu est significativement différent de celui qui a été déclaré comme testé
-            ({{$compareQuantite}}): les proportions
-            sont peut-être à adapter pour certains ingrédients. </p>
-          {{ end }}
-        </div>
-      </div>
-    </div>
+      {{/* reccupération des ingredients warning de la recette  */}}
+      {{- $alergeneRecette := slice -}}
+      {{- $lactoseRecette := slice -}}
+      {{- $glutenRecette := slice -}}
+      {{- $noveganRecette := slice -}}
+      {{ $ingredientsL := slice }}
 
-    {{ end }}
+      {{- range $key, $value := .Params.ingredients -}}
+      {{- with . -}}
+      {{- range $index, $element := . -}}
+      {{ $ingredientsL = $ingredientsL | append .title}}
+      {{- end }}
+      {{- end -}} {{/* with */}}
+      {{- end -}}
 
+      {{- $alergeneRecette := intersect $alergene $ingredientsL -}}
+      {{- $glutenRecette := intersect $gluten $ingredientsL -}}
+      {{- $lactoseRecette := intersect $lactose $ingredientsL -}}
+      {{- $noveganRecette := intersect $novegan $ingredientsL -}}
 
-      {{/* ::: reccupération des ingredients warning de la recette  */}}
-       {{- $alergeneRecette := slice -}}
-       {{- $lactoseRecette := slice -}}
-       {{- $glutenRecette := slice -}}
-       {{- $noveganRecette := slice -}}
-       {{ $ingredientsL := slice }}
-
-       {{- range $key, $value := .Params.ingredients -}}
-       {{- with . -}}
-       {{- range $index, $element := . -}}
-       {{ $ingredientsL = $ingredientsL | append .title}}
-       {{- end }}
-       {{- end -}} {{/* with */}}
-       {{- end -}}
-
-       {{- $alergeneRecette := intersect $alergene $ingredientsL -}}
-       {{- $glutenRecette := intersect $gluten $ingredientsL -}}
-       {{- $lactoseRecette := intersect $lactose $ingredientsL -}}
-       {{- $noveganRecette := intersect $novegan $ingredientsL -}}
-
-       {{- $assiettesInit := .Params.plate -}}
-       {{- with (or ( $alergeneRecette ) ( $glutenRecette) ( $lactoseRecette) ( $noveganRecette)) -}}
-
-       <div class="col-13 col-md-6 col-lg-6 col-xl-6">
-         <div class="card border-danger shadow">
-           <div class="card-body small">
-             {{- with $alergeneRecette -}}
-             <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "fs" 3) }}
-               Ingrédients alergenes :
-               {{ delimit $alergeneRecette ", "}}
-             </div>
-             {{- end -}}
-             {{- with $glutenRecette -}}
-             <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "fs" 3) }}
-               Ingrédients contenant du gluten :
-               {{ delimit $glutenRecette ", "}}
-             </div>
-             {{- end -}}
-             {{- with $lactoseRecette -}}
-             <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "fs" 3) }}
-               Ingrédients contenant du lactose :
-               {{ delimit $lactoseRecette ", "}}
-             </div>
-             {{- end -}}
-             {{- with $noveganRecette -}}
-             <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "fs" 3) }} Ingrédients
-               non-vegan
-               :
-               {{ delimit $noveganRecette ", "}}
-             </div>
-             {{- end -}}
-           </div>
-         </div>
-       </div>
-       {{- end -}} {{/* with alergene ... */}}
-       {{ end }} {{/* with site.GetPage $url */}}
+      {{- $assiettesInit := .Params.plate -}}
+     
+      <div class="printonly small my-1">
+        {{ if $alertQuantite }}
+            {{ if not $checkYes }}
+            <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-circle" "display" "inline" "fs" 4) }}
+              Le nombre de couverts prévu est significativement différent de celui qui a été déclaré comme testé
+              ({{$compareQuantite}}): les proportions
+              sont peut-être à adapter pour certains ingrédients. </div>
+            {{ end }}
+        {{ end }}
       
-    </div>
+        {{- with (or ( $alergeneRecette ) ( $glutenRecette) ( $lactoseRecette) ( $noveganRecette)) -}}
+      
+            {{- with $alergeneRecette -}}
+            <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "fs" 3) }}
+              Ingrédients alergenes :
+              {{ delimit $alergeneRecette ", "}}
+            </div>
+            {{- end -}}
+            {{- with $glutenRecette -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "fs" 3) }}
+              Ingrédients contenant du gluten :
+              {{ delimit $glutenRecette ", "}}
+            </div>
+            {{- end -}}
+            {{- with $lactoseRecette -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "fs" 3) }}
+              Ingrédients contenant du lactose :
+              {{ delimit $lactoseRecette ", "}}
+            </div>
+            {{- end -}}
+            {{- with $noveganRecette -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "fs" 3) }} Ingrédients
+              non-vegan:
+              {{ delimit $noveganRecette ", "}}
+            </div>
+            {{- end -}}
+        {{- end -}} 
+      </div>
+      <hr class="mt-1">
+
+      <div class="row justify-content-center mt-2 no-print d-print-none">
+      
+        {{ if $alertQuantite }}
+        <div class="col-12 col-md-6 col-lg-6 col-xl-6  ">
+          <div class="card border-danger shadow small px-4 card-body">
+            {{ if not $checkYes }}
+            <p> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-circle" "display" "inline" "fs" 4) }}
+              Le nombre de couverts prévu est significativement différent de celui qui a été déclaré comme testé
+              ({{$compareQuantite}}): les proportions
+              sont peut-être à adapter pour certains ingrédients. </p>
+            {{ end }}
+          </div>
+        </div>
+        {{ end }}
+      
+        {{- with (or ( $alergeneRecette ) ( $glutenRecette) ( $lactoseRecette) ( $noveganRecette)) -}}
+        <div class="col-12 col-md-6 col-lg-6 col-xl-6">
+          <div class="card border-danger shadow small px-4 card-body">
+      
+            {{- with $alergeneRecette -}}
+            <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "fs" 3) }}
+              Ingrédients alergenes :
+              {{ delimit $alergeneRecette ", "}}
+            </div>
+            {{- end -}}
+            {{- with $glutenRecette -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "fs" 3) }}
+              Ingrédients contenant du gluten :
+              {{ delimit $glutenRecette ", "}}
+            </div>
+            {{- end -}}
+            {{- with $lactoseRecette -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "fs" 3) }}
+              Ingrédients contenant du lactose :
+              {{ delimit $lactoseRecette ", "}}
+            </div>
+            {{- end -}}
+            {{- with $noveganRecette -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "fs" 3) }} Ingrédients
+              non-vegan:
+              {{ delimit $noveganRecette ", "}}
+            </div>
+            {{- end -}}
+          </div>
+        </div>
+        {{- end -}} {{/* with alergene ... */}}
+      </div>
+      </div>
+    {{ end }} {{/* with site.GetPage $url */}}
       
     {{/* :::  ___LES INGREDIENTS  */}}
     <div id="IngredientsEtPreparation-recette" class="row" v-show="displayDetailsRecettes">
@@ -582,12 +622,27 @@
               </div>
     {{ end }} {{/* with site.GetPage $url */}}
     </div>
+
+    {{ if .Params.commentaire }}
+      <div class="card">
+        <div class="card-body">
+          <p> {{ partial "inline-svg" (dict "src" "fonticons/information-line" "display" "inline" "fs" 4) }} {{.}}
+          </p>
+        </div>
+      </div>
+    {{ end }} 
+    
+
+
   </div>
 </div>
 {{/*  Incrementation en fin de range  pour un unique ID par recettes  */}}
 {{$recetteKey = (add (float $recetteKey) 1)}}
 
-{{ end }}
+
+
+{{ end }} {{/* recettes du repas ? */}}
+
 </div>
 
 
@@ -635,21 +690,24 @@
     {{ range sort $IngredientsTypesList "iType" "desc"}}
     <div 
       v-if="this.totalsIngredientsFiltered('{{.iType}}', 'ingredients').length > 0"
-      class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary"
+      class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary print-nocard"
       :class="{'no-print':!toPrint.{{.iType}} }"
       id="{{.iType}}"
 
       >
       <div class="card-body">
-        <div class="no-print my-2 text-end">
-          <a 
-            class="btn btn-outline-secondary btn-sm text-muted " 
-            role="button"
-            @click="printThis('{{.iType}}', 'ingredients')"
-            >Imprimer !</a>
+        <div class="no-print">
+          <span class="fs-4"> {{.iType}} </span>
+          <div class="my-2 float-end">
+            <a
+              class="btn btn-outline-secondary btn-sm text-muted "
+              role="button"
+              @click="printThis('{{.iType}}', 'ingredients')"
+              >{{ partial "inline-svg" (dict "src" "fonticons/printer"  "fs" 3) }}</a>
+          </div>
         </div>
-        <div v-if="startDate !== startDateSelected || endDate !== endDateSelected" class="fs-6 ms-2">
-            - Du [[new Date (startDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long', day:
+        <div v-if="startDate !== startDateSelected || endDate !== endDateSelected" class="fs-6 text-center">
+            Du [[new Date (startDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long', day:
             'numeric'})]] au [[new Date (endDateSelected).toLocaleDateString("fr-FR", {weekday: 'long', month: 'long',
             day: 'numeric'})]]
         </div>
@@ -695,7 +753,7 @@
                   <td v-show=" printAddCol ===  '2' || printAddCol ===  '3' " class="printonly print-td-15" ></td>
         
                 </tr>
-
+       
 
               </tbody>
             </table>
@@ -712,7 +770,7 @@
               </thead>
               <tbody>
                 <tr v-for="item in totalsIngredientsFiltered('{{ .iType }}', 'ingredients')"
-                  :class="{'table-secondary fw-bold': item.total && showAllColIngredients}">
+                  >
                   <template v-if="item.total">
                     <td>[[item.ingredient]]</td>
   
@@ -968,11 +1026,6 @@ methods: {
     });
   },
 
-  {{/*  AddPrintCol(nb) {
-    if this.printCol.includes(nb) {
-      
-    }
-  }  */}}
 
   print() {
     this.printDialog = false;
@@ -1126,7 +1179,7 @@ methods: {
         // Sinon, ajouter une nouvelle quantité à la liste des quantités pour cet ingrédient
         listQuantite.get(item.ingredient).push({
           quantite: item.unit === 'grammes' ? this.convertToKg(item.quantite) : item.quantite,
-          unit: item.unit,
+          unit: item.unit, {{/* TODO : vérifier */}}
         });
       }
 
@@ -1206,15 +1259,16 @@ methods: {
     return result;
   },
 
+  {{/* TODO To computed ?  */}}
   ingredientTypeList () {
     return [...new Set (this.ingredients.map(ingredient => ingredient.ingredientType))];
   },
 
 
-
+{{/*  USELESS ?
   filteredResultsCount(iType) {
     return this.totalsIngredientFiltered(iType, 'ingredients').length;
-  },
+  },  */}}
 
   datesAllowedRange: function (val) {
 // retourne toutes les dates comprisent entre la premiere et la dernieres =>
