@@ -370,7 +370,7 @@ collections:
                     [
                       "Kg",
                       "grammes",
-                      "unités",
+                      "unité",
                       "litre",
                       "c. à soupe",
                       "c. à café",
@@ -702,7 +702,7 @@ collections:
     label: "Ingrédients"
     files:
       - name: ingredients_legumes
-        label: Légumes et Fruits
+        label: Légumes et Fruits Frais
         file: data/ingredients/legumes.json
         format: json
         fields:
