@@ -145,7 +145,7 @@
 </div>
 
 {{/*  ::: Impression - MODAL  */}}
-<div class="modal modal-xl fade d-print-none" tabindex="-1" id="modalImpression" aria-labelledby="modalImpressionLabel" aria-hidden="true">
+<div class="modal modal-lg fade d-print-none" tabindex="-1" id="modalImpression" aria-labelledby="modalImpressionLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable ">
     <div class=" modal-content" >
       <div class="modal-header">
@@ -202,7 +202,7 @@
  
       <hr>
       <div class="text-end">
-        <a class="btn btn-primary btn-sm " @click="print" role="button">Imprimer !</a>
+        <a class="btn btn-primary btn-sm"  @click="print" role="button" data-bs-dismiss="modal">Imprimer !</a>
       </div>
       </div>
     </div>
@@ -648,6 +648,7 @@
 
 <div class="py-5 no-print" id="TotalIngredients"><hr></div>
 <div class="container-fluid" >
+  <h3>Listes des {{ len $IngredientList }} Ingrédients présents dans les menus</h3>
   <div class="row justify-content-evenly">
 
     {{/*  ::: _Sidebar Total ingredients  */}}
@@ -660,37 +661,118 @@
             <div class="mb-3">
               <input id="datepickerStart" class="flatpickr flatpickr-input form-control"
                 type="text" readonly="readonly" placeholder="Date de début" v-model="startDateSelected"
-                ></div>
+                >
+            </div>
             <div class="mb-3">
               <input id="datepickerEnd" class="flatpickr flatpickr-input form-control" type="text"
-                readonly="readonly" placeholder="Date de fin" v-model="endDateSelected"></div>
-          
+                readonly="readonly" placeholder="Date de fin" v-model="endDateSelected">
+              </div>
               <div class="mb-3 text-end">
                 <button class="btn btn-primary btn-sm shadow-sm text-white" @click="datesReset" type="button" id="btn-allDate">Toutes les dates</button>
               </div>
             </div>
+
+            <div class="mb-3">
+              Afficher les quantités des produits frais par périodes →
+            </div>
+            <div class="input-group mb-3">
+              <input type="number" v-model="daysPerRange" class="form-control" min="1" max="9" @input="changeDateRanges"
+              >
+              <span class="input-group-text" id="basic-addon2">jours</span>
+            </div>
+            <div class="mb-1 form-check form-switch">
+              <input type="checkbox" class="form-check-input" v-model="legumesByRanges" name="cb-legumesByRanges" id="cb-legumesByRanges">
+              <label for="cb-legumesByRanges">... pour les fruit legumes frais </label>
+            </div>
+            <div class="mb-1 form-check form-switch">
+              <input type="checkbox" class="form-check-input" v-model="animauxByRanges" name="cb-animauxByRanges" id="cb-animauxByRanges">
+              <label for="cb-animauxByRanges">... pour la viandes et poissons </label>
+            </div>
+
+
             <hr>
             <div class="form-check form-switch mb-3">
               <input class="form-check-input" type="checkbox" v-model="showAllColIngredients" id="checkRecipeDetail">
               <label for="checkRecipeDetail">Afficher les recettes pour chaque ingrédient</label>
             </div>
+            <div class="mb-3">
+              <input type="text" v-model="search" class="form-control" placeholder="Rechercher un ingrédient">
+            </div>
           </div>
+
         </div>
   
   
       </nav>
   
   {{/* ::: _Total INGREDIENTS   */}}
-  <div class="col  print-col-12" :class="{'no-print':!toPrint.ingredients}">
-    {{/*  TODO  */}}
-    <div id="FraisByDay" class="">
+  <div class="col  print-col-12 ms-3" :class="{'no-print':!toPrint.ingredients}">
+    {{/* :::  __FraisByDayRange  */}}
+    <div id="LegumesRanges" class="">
+      <template v-for="(range, index) in rangesDates">
+        <div 
+        v-if="totalsIngredientsFiltered('Legumes', range[0], range[range.length - 1] ).length > 0"
+        class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
+        :class="{'no-print':!toPrint.LegumesRanges }"
+        :id="range[0]"
   
+        >
+        <div class="card-body">
+          <div class="no-print">
+            <span class="fs-5"> Fruits et Legumes Frais du [[ range[0] ]] au [[range[range.length - 1] ]] </span>
+            <div class="my-2 float-end">
+              <a
+                class="btn btn-outline-secondary btn-sm text-muted "
+                role="button"
+                @click="printThis('range', 'ingredients')"
+                >{{ partial "inline-svg" (dict "src" "fonticons/printer"  "fs" 3) }}</a>
+            </div>
+          </div>
+          <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " v-if="!showAllColIngredients">
+            <thead>
+              <tr>
+                <th>Fruits et Legumes Frais</th>
+                <th class="text-end">Total</th>
+                <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
+                <th class="printonly" v-show="printAddCol === '2' "></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in totalsIngredientsFiltered('Legumes', range[0], range[range.length - 1])"
+                >
+                <template v-if="item.total">
+                  <td>[[item.ingredient]]</td>
+
+                <td class="text-end print-td-mw-15">
+                  [[item.total]]
+                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
+                  <span v-if="Array.isArray(item.fallbackTotal)">
+                    <template v-for="(fallback, index) in item.fallbackTotal">
+                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
+                      <template v-if="index !== item.fallbackTotal.length - 1">
+                        <span> + </span>
+                      </template>
+                    </template>
+                  </span>
+                </td>
+                <td v-show="printAddCol === '1' || printAddCol ===  '2'  " class="printonly print-td-15 "></td>
+                <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
+                </template>
+
+              </tr>
+            </tbody>
+          </table>
+          </div>
+          </div>
+        </template>
+
+      
     </div>
   
     {{ range sort $IngredientsTypesList "iType" "desc"}}
     <div 
-      v-if="this.totalsIngredientsFiltered('{{.iType}}', 'ingredients').length > 0"
-      class="card my-2 mb-lg-6 avoid-break-inside  bg-tertiary print-nocard"
+      v-if="this.totalsIngredientsFiltered('{{.iType}}').length > 0"
+      class="card my-2 mb-lg-6 avoid-break-inside  mb-3 print-nocard"
       :class="{'no-print':!toPrint.{{.iType}} }"
       id="{{.iType}}"
 
@@ -769,7 +851,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in totalsIngredientsFiltered('{{ .iType }}', 'ingredients')"
+                <tr v-for="item in totalsIngredientsFiltered('{{ .iType }}')"
                   >
                   <template v-if="item.total">
                     <td>[[item.ingredient]]</td>
@@ -862,7 +944,6 @@
         
 
         {{/*  ::: ___Print parameters  */}}
-        {{/*  elementsToPrint: ['all'],  */}}
         printSelectIng: false,
         toPrint: {
           recettesSection: true,
@@ -880,11 +961,15 @@
 
         {{/*  printAffiches: false,  */}}
 
-        printDialog: false,
+
         IngredientsTypesList: [{{ range $IngredientsTypesList }} {{ .iType }}, {{ end }} ],
       
-        ranges: [], // Tableau pour stocker les tranches de dates
+        rangesDates: [], // Tableau pour stocker les tranches de dates
         daysPerRange: 3,
+        cbFraisByRanges: false,
+        legumesByRanges: false,
+        animauxByRanges: false,
+        
         configDPStart: {
           enableTime: false,
           dateFormat: "Y-m-d",
@@ -939,8 +1024,7 @@ mounted () {
   };
 
   rangeDateEvents: {
-    this.splitDateRanges();
-
+    this.splitDateRanges(this.daysPerRange);
   };
 
   endDateDebugGen: {
@@ -993,9 +1077,9 @@ watch: {
     Meme fonction dans mounted() pour l'initialisation ! Doit etre dans watch() sinon les changement de endDateSelected ne sont pas pris en compte... */ 
     const lastDateSelected = new Date(this.endDateSelected)
     this.endDateSelectedDebug = new Date(lastDateSelected.setDate(lastDateSelected.getDate() + 1 )).toISOString().substr(0, 10);
-  }
+  }, 
 
-
+  {{/*  daysPerRange: 'splitDateRanges',  */}}
 }, // watch() end
 
 {{/*  ::: methods  */}}
@@ -1028,8 +1112,9 @@ methods: {
 
 
   print() {
-    this.printDialog = false;
-    window.print();
+      setTimeout(() => {
+        window.print();
+      }, 500); 
   },
 
   {{/*  USELESS . C'est quoi ? Pas de reference  */}}
@@ -1045,7 +1130,7 @@ methods: {
     sel[sel.selectedIndex].setAttribute("selected", "selected");
   },
 
-  {{/*  :::__Date picker reset  */}}
+  {{/*  :::__Date picker  */}}
   
   datesReset: function () {
     this.startDateSelected = this.startDate;
@@ -1102,59 +1187,69 @@ methods: {
     return quantite / 1000;
   },
 
-  {{/*  ::: date split range   */}}
-  splitDateRanges() {
-      const { datesRepas, daysPerRange } = this;
-      let currentRange = [];
+  {{/*  ::: __date split range   */}}
 
-      for (let i = 0; i < datesRepas.length; i++) {
-        if (currentRange.length === 0) {
-          currentRange.push(datesRepas[i]);
-        } else {
-          const currentDate = new Date(datesRepas[i]);
-          const previousDate = new Date(currentRange[currentRange.length - 1]);
+  changeDateRanges(){
+    this.splitDateRanges(this.daysPerRange)
+  },
 
-          const diffInDays = (currentDate - previousDate) / (1000 * 60 * 60 * 24);
-
-          if (diffInDays === 1) {
-            currentRange.push(datesRepas[i]);
-          } else {
-            // Si la différence n'est pas de 1 jour, cela signifie une nouvelle tranche
-            if (currentRange.length >= daysPerRange) {
-              this.ranges.push(currentRange);
-            }
-            currentRange = [datesRepas[i]];
-          }
-        }
+  splitDateRanges(newDaysPerRange) {
+    
+    let currentRange = [];
+    this.rangesDates = [];
+  
+    for (let i = 0; i < this.datesRepas.length; i++) {
+      currentRange.push(this.datesRepas[i]);
+  
+      if (currentRange.length === Number(newDaysPerRange)) {
+        this.rangesDates.push([...currentRange]);
+        currentRange = [];
       }
-
-      // Ajoutez la dernière tranche s'il y a lieu
-      if (currentRange.length >= daysPerRange) {
-        this.ranges.push(currentRange);
-      }
-
+    }
+  
+    if (currentRange.length > 0) {
+      this.rangesDates.push([...currentRange]);
+    }
   },
 
 
-  {{/* ::: calculs des totaux des ingredients  */}}
-  filteredIngredients: function (iType, startDate, endDate) {
+
+
+  {{/* ::: __calculs des totaux des ingredients  */}}
+  filteredIngredients: function (iType, start, end) {
     // Récupérer la liste des ingrédients
     let ingredients = this.ingredients
 
     // Si pas de valeurs definies, alors les dates sont celles du datepicker
-    var startDate = startDate === '' ? this.startDateSelected : startDate;
-    var endDate = endDate === '' ? this.endDateSelected : endDate;
-
+    var start = start ?? this.startDateSelected ;
+    var end = end ?? this.endDateSelected;
+  
     // Filtrer les ingrédients selon les critères spécifiés
     const filtered = ingredients.filter(
       (i) =>
         i.ingredientType === iType &&
-        i.dateService >= this.startDateSelected &&
-        i.dateService <= this.endDateSelectedDebug &&
+        i.dateService >= start &&
+        i.dateService <= end &&
         i.ingredient.toLowerCase().includes(this.search.toLowerCase())
     );
     return filtered
   },
+
+
+ 
+  totalsIngredientsFiltered(iType, start, end) {
+    return this.totalsIngredients(this.filteredIngredients(iType, start, end));
+  },
+
+  totalsAndDetailIngredientsFiltered(iType) {
+    const total = this.totalsIngredients(this.filteredIngredients(iType));
+    const element = this.filteredIngredients(iType);
+
+    const result = new Set([...element, ...total].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
+
+    return result;
+  },
+
 
   totalsIngredients: function (filteredIng) {
     const totals = [];
@@ -1238,39 +1333,33 @@ methods: {
     })).sort((a, b) => a.ingredient.localeCompare(b.ingredient));
   },
 
- 
-  totalsIngredientsFiltered(iType) {
-    // Appeler la première méthode pour filtrer les ingrédients
-    const filtered = this.filteredIngredients(iType);
-
-    // Appeler la deuxième méthode pour calculer les totaux à partir des ingrédients filtrés
-    const totals = this.totalsIngredients(filtered);
-
-    // Retourner les totaux
-    return totals;
-  },
-
-  totalsAndDetailIngredientsFiltered(iType) {
-    const total = this.totalsIngredients(this.filteredIngredients(iType));
-    const element = this.filteredIngredients(iType);
-
-    const result = new Set([...element, ...total].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
-
-    return result;
-  },
-
   {{/* TODO To computed ?  */}}
   ingredientTypeList () {
     return [...new Set (this.ingredients.map(ingredient => ingredient.ingredientType))];
   },
 
+  {{/* :::__ ingredientsByRanges  */}}
+  fraisByRanges() {
+    if (this.cbFraisByRanges  === "true") {
+    this.legumesByRanges = true;
+    this.animauxByRanges = "true";
+    }
+    else {
+      this.legumesByRanges = "false";
+      this.animauxByRanges = "false";
+    
+    }
+  }
 
 {{/*  USELESS ?
   filteredResultsCount(iType) {
     return this.totalsIngredientFiltered(iType, 'ingredients').length;
   },  */}}
 
-  datesAllowedRange: function (val) {
+
+
+
+  {{/*  datesAllowedRange: function (val) {
 // retourne toutes les dates comprisent entre la premiere et la dernieres =>
     for(
       var datesAllowedArray=[],
@@ -1285,7 +1374,7 @@ methods: {
         return val
       };
     }
-  },
+  },  */}}
 
 
 } {{/* fin de methods */}}
