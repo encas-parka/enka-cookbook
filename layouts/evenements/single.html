@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="{{ "flatpickr/flatpickr.css" | relURL }}">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"> 
 
-<iframe id="print-iframe" width="0" height="0"></iframe>
+<iframe id="print-iframe" width="0" height="0"></iframe> {{/* USELESS  ? git-comment ? */}}
 
 <!--::: Liste qui contiendra tous les ingrédients avec leurs données associés (quantité, recette, date, assietes...). Sert aux tableaux des quantités.  -->
 {{- $IngredientList := slice -}}
@@ -89,8 +89,9 @@
           "assiettesRecettes" $assiettesRecettes
           "assiettes" $assiettes
           ) -}}
-{{- $IngredientsTypesList = $IngredientsTypesList | append (dict  "iType" ($key | strings.FirstUpper ))  -}}
-                  {{- end -}}
+
+          {{- $IngredientsTypesList = $IngredientsTypesList | append (dict  "iType" ($key | strings.FirstUpper ))  -}}
+        {{- end -}}
       {{- end -}}
       
       {{- end -}} {{/* {{ with site.GetPage $url }} */}}
@@ -103,6 +104,82 @@
 {{/*  Dédoublage des listes  */}}
 {{- $IngredientsNamesList = $IngredientsNamesList |uniq -}}
 {{- $IngredientsTypesList = $IngredientsTypesList | uniq -}}
+
+{{/* TODO .mettre dans un partial ?  ET c'est dans une boucle !?*/}}
+{{/* Reccupération des données ingredient alergene */}}
+{{ $alergene := slice }}
+{{ $lactose := slice }}
+{{ $gluten := slice }}
+{{ $novegan := slice }}
+
+
+{{- range $.Site.Data.ingredients -}}
+  {{- with .ingredients -}}
+    {{- range . -}}
+      {{ $ingredient := .title}}
+      {{- if .alergene -}}
+        {{ $alergene = $alergene | append $ingredient }}
+      {{- end -}}
+      {{- if eq .sans_lactose  false -}}
+        {{- $lactose = $lactose | append $ingredient -}}
+      {{- end -}}
+{{- if eq .sans_gluten false -}}
+{{ $gluten = $gluten | append $ingredient }}
+{{- end -}}
+{{- if eq .vegan false -}}
+{{ $novegan = $novegan | append $ingredient }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*  Regroupement des ingredients allergenes  */}}
+
+{{ $allergenesList := slice "Gluten" "Crustacé" "Oeuf" "Poisson" "Viande" "Porc" "Arachides" "Soja" "Fruits à coque" "Céleri" "Moutarde" "Sésame" "Sulfites" "Lupin" "Produit laitier"  }}
+
+
+{{ $sAllergenes := newScratch }}
+{{ $allergeneTypesToAppend := ""}}
+
+{{- range $.Site.Data.ingredients -}}
+  {{- range .ingredients -}}
+    {{ $ingredient := . }}
+    {{- if .alergenesIng -}}
+      {{- $thoseAllergenes := intersect .alergenesIng $allergenesList -}}
+      {{- $ingTitle := .title -}}
+      {{ range $thoseAllergenes -}}
+           {{$sAllergenes.Add . (slice $ingTitle)}}
+      {{ end }}    
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{ $allergenesDict := dict 
+  "Produit laitier" ($sAllergenes.Get "Produit laitier") 
+  "Gluten" ($sAllergenes.Get "Glutten") 
+  "Crustacé" ($sAllergenes.Get "Crustacé")
+  "Oeuf" ($sAllergenes.Get "Oeuf")
+  "Poisson" ($sAllergenes.Get "Poisson")
+  "Viande" ($sAllergenes.Get "Viande")
+  "Porc" ($sAllergenes.Get "Porc")
+  "Arachides" ($sAllergenes.Get "Arachides")
+  "Soja" ($sAllergenes.Get "Soja")
+  "Fruits à coque" ($sAllergenes.Get "Fruits à coque")
+  "Céleri" ($sAllergenes.Get "Céleri")
+  "Moutarde" ($sAllergenes.Get "Moutarde")
+  "Sésame" ($sAllergenes.Get "Sésame")
+  "Sulfites" ($sAllergenes.Get "Sulfites")
+  "Lupin" ($sAllergenes.Get "Lupin")
+
+}}
+
+
+{{ range $key, $value := $allergenesDict }}
+<li>{{$key}} : {{range $value}} {{.}} - {{end}}</li>
+{{ end }} 
+
+
 
 
 <div id="app">
@@ -309,33 +386,6 @@
 {{- $typePlat := .typePlat -}}
 {{- $assiettes := .assiettes -}}
 {{- $chef := .chef -}}
-
-{{/* TODO .mettre dans un partial ? */}}
-{{/* Reccupération des données ingredient alergene */}}
-    {{ $alergene := slice }}
-    {{ $lactose := slice }}
-    {{ $gluten := slice }}
-    {{ $novegan := slice }}
-
-    {{- range $.Site.Data.ingredients -}}
-    {{- with .ingredients -}}
-    {{- range . -}}
-    {{ $ingredient := .title}}
-    {{- if eq .alergene true -}}
-    {{ $alergene = $alergene | append $ingredient }}
-    {{- end -}}
-    {{- if eq .sans_lactose false -}}
-    {{- $lactose = $lactose | append $ingredient -}}
-    {{- end -}}
-    {{- if eq .sans_gluten false -}}
-    {{ $gluten = $gluten | append $ingredient }}
-    {{- end -}}
-    {{- if eq .vegan false -}}
-    {{ $novegan = $novegan | append $ingredient }}
-    {{- end -}}
-    {{- end -}}
-    {{- end -}}
-    {{- end -}}
 
 
 
@@ -685,11 +735,11 @@
             </div>
             <div class="mb-1 form-check form-switch">
               <input type="checkbox" class="form-check-input" v-model="legumesByRanges" name="cb-legumesByRanges" id="cb-legumesByRanges">
-              <label for="cb-legumesByRanges">... pour les fruit legumes frais </label>
+              <label for="cb-legumesByRanges">... pour les fruits et legumes frais </label>
             </div>
             <div class="mb-1 form-check form-switch">
               <input type="checkbox" class="form-check-input" v-model="animauxByRanges" name="cb-animauxByRanges" id="cb-animauxByRanges">
-              <label for="cb-animauxByRanges">... pour la viandes et poissons </label>
+              <label for="cb-animauxByRanges">... pour les viandes et poissons </label>
             </div>
 
 
@@ -711,10 +761,125 @@
   {{/* ::: _Total INGREDIENTS   */}}
   <div class="col  print-col-12 ms-3" :class="{'no-print':!toPrint.ingredients}">
     {{/* :::  __FraisByDayRange  */}}
-    <div id="LegumesRanges" class="">
+    {{ $fraisByRanges := slice | append  (dict "idR" "LegumesRanges" "titleR" "Fruits Legumes Frais" "iType" "Legumes" "thisRange" "legumesByRanges") (dict "idR" "AnimauxRanges" "titleR" "Viandes/Poissons Frais" "iType" "Animaux" "thisRange" "animauxByRanges") }}
+
+    {{ range $fraisByRanges }}
+
+    <div id="{{.idR}}" class="">
       <template v-for="(range, index) in rangesDates">
         <div 
-        v-if="totalsIngredientsFiltered('Legumes', range[0], range[range.length - 1] ).length > 0"
+        v-if="totalsIngredientsFiltered('{{.iType}}', range[0], range[range.length - 1] ).length > 0 && {{.thisRange}} "
+        class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
+        :class="{'no-print':!toPrint.LegumesRanges }"
+        :id="range[0]"
+        >
+        <div class="card-body">
+          <div class="no-print">
+            <span class="fs-5"> {{.titleR}} du [[ range[0] ]] au [[range[range.length - 1] ]] </span>
+            <div class="my-2 float-end">
+              <a
+                class="btn btn-outline-secondary btn-sm text-muted "
+                role="button"
+                @click="printThis('range', 'ingredients')"
+                >{{ partial "inline-svg" (dict "src" "fonticons/printer"  "fs" 3) }}</a>
+            </div>
+          </div>
+    
+          {{/*  ::: ___ table range Frais sans detail  */}}
+
+          <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " v-if="!showAllColIngredients">
+            <thead>
+              <tr>
+                <th>{{.iType}}</th>
+                <th class="text-end">Total</th>
+                <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
+                <th class="printonly" v-show="printAddCol === '2' "></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in totalsIngredientsFiltered('{{.iType}}', range[0], range[range.length - 1])"
+                >
+                <template v-if="item.total">
+                  <td>[[item.ingredient]]</td>
+
+                <td class="text-end print-td-mw-15">
+                  [[item.total]]
+                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
+                  <span v-if="Array.isArray(item.fallbackTotal)">
+                    <template v-for="(fallback, index) in item.fallbackTotal">
+                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
+                      <template v-if="index !== item.fallbackTotal.length - 1">
+                        <span> + </span>
+                      </template>
+                    </template>
+                  </span>
+                </td>
+                <td v-show="printAddCol === '1' || printAddCol ===  '2'  " class="printonly print-td-15 "></td>
+                <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
+                </template>
+
+              </tr>
+            </tbody>
+          </table>
+    
+          {{/*  ::: ___ table range Frais Avec detail  */}}
+
+          <table class="table table-bordered table-responsive" v-if="showAllColIngredients">
+            <thead>
+              <tr>
+                <th>Ingredients {{.iType}} </th>
+                <th class="text-center">Recettes</th>
+                <th class="text-end">Total</th>
+                <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
+                <th class="printonly" v-show="printAddCol === '2' "></th>
+         
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in totalsAndDetailIngredientsFiltered('{{ .iType }}', range[0], range[range.length - 1])"
+                :class="{'table-secondary fw-bold': item.total}"
+                >
+                <td :class="{'small text-muted': !item.total}">[[item.ingredient]]</td>
+                <td v-if="item.recette" class="small">
+                  <span class="fw-bold">[[item.recette]]</span> le [[new Date (item.dateService).toISOString().substr(0, 10)]] /
+                  [[item.horaire]] <br> pour [[item.assiettes]] couverts
+                  <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span>
+                </td>
+                <td v-else></td>
+                <td class="text-end">
+                  [[item.total]]
+                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
+                  <span v-if="Array.isArray(item.fallbackTotal)">
+                    <template v-for="(fallback, index) in item.fallbackTotal">
+                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
+                      <template v-if="index !== item.fallbackTotal.length - 1">
+                        <span> + </span>
+                      </template>
+                    </template>
+                  </span>
+                </td>
+                <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15" ></td>
+                <td v-show=" printAddCol ===  '2' || printAddCol ===  '3' " class="printonly print-td-15" ></td>
+      
+              </tr>
+     
+
+            </tbody>
+          </table>
+          </div>
+          </div>
+        </template>
+    {{ end }}
+
+ 
+
+      
+    </div>
+
+    {{/*  <div id="LegumesRanges" class="">
+      <template v-for="(range, index) in rangesDates">
+        <div 
+        v-if="totalsIngredientsFiltered('Legumes', range[0], range[range.length - 1] ).length > 0 && legumesByRanges"
         class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
         :class="{'no-print':!toPrint.LegumesRanges }"
         :id="range[0]"
@@ -770,7 +935,7 @@
         </template>
 
       
-    </div>
+    </div>  */}}
   
     {{ range sort $IngredientsTypesList "iType" "desc"}}
     <div 
@@ -1204,13 +1369,12 @@ methods: {
     for (let i = 0; i < this.datesRepas.length; i++) {
       currentRange.push(this.datesRepas[i]);
   
-      if (currentRange.length === Number(newDaysPerRange)) {
+      if (currentRange.length > Number(newDaysPerRange)) {
         this.rangesDates.push([...currentRange]);
         currentRange = [];
       }
     }
-  
-    if (currentRange.length > 0) {
+      if (currentRange.length > 0) {
       this.rangesDates.push([...currentRange]);
     }
   },
