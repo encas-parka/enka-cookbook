@@ -12,11 +12,22 @@
 <!-- Liste qui contiendra qui contient les listes de recettes pour chaque date -->
 {{- $recettesList := slice -}}
 
+{{/*  TODO  */}}
 {{- $IngredientsNamesList := slice -}}
 
 {{- $IngredientsTypesList := slice -}}
 {{- $recettesAll :=  dict -}}
 {{$recetteKey:= 1}}
+
+{{/*  Reccuperation des ingredients frais  */}}
+{{ $pFrais := slice }}
+{{- range $.Site.Data.ingredients -}}
+  {{- range .ingredients -}}
+    {{- if .pFrais -}}
+      {{$pFrais =  $pFrais | append .title}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 
 {{- range $.Param "repas" -}}
   <!-- Creation des variables qui ne seront plus visible au prochain scope. Nous sommes dans les params de l'Evenement -->
@@ -75,13 +86,20 @@
         {{ if .quantite }}
           {{ $quantiteCompute = ((div (mul (float .quantite) (float $assiettes )) (float $assiettesRecettes ))) }}
         {{ end }}
+        
+        {{ $iType := ""}}
+        {{ if and  (or (eq $key "lof") (eq $key "sucres") (eq $key "autres")) (in $pFrais .title) }}
+        {{ $iType = "Frais"  }}
+        {{ else }}
+        {{ $iType = $key | strings.FirstUpper  }}
+        {{ end }}
 
           {{- $IngredientList =
           $IngredientList | append (dict
            "ingredient" .title
           "quantite" $quantiteCompute
           "unit" .unit
-          "ingType" ($key | strings.FirstUpper )
+          "ingType" $iType
           "recette" $recette
           "dateService" $dateService
           "horaire" $horaire
@@ -90,7 +108,13 @@
           "assiettes" $assiettes
           ) -}}
 
-          {{- $IngredientsTypesList = $IngredientsTypesList | append (dict  "iType" ($key | strings.FirstUpper ))  -}}
+          {{ if and  (eq $key "lof") (in $pFrais .title) }}
+            {{ $iType = "Frais"  }}
+            {{- $IngredientsTypesList = $IngredientsTypesList | append (dict  "iType" $iType)  -}}
+          {{ else }}
+           {{- $IngredientsTypesList = $IngredientsTypesList | append (dict  "iType" ($key | strings.FirstUpper ))  -}}
+          {{ end }}
+
         {{- end -}}
       {{- end -}}
       
@@ -106,81 +130,40 @@
 {{- $IngredientsTypesList = $IngredientsTypesList | uniq -}}
 
 {{/* TODO .mettre dans un partial ?  ET c'est dans une boucle !?*/}}
-{{/* Reccupération des données ingredient alergene */}}
-{{ $alergene := slice }}
-{{ $lactose := slice }}
-{{ $gluten := slice }}
-{{ $novegan := slice }}
 
+{{/* ::: Regroupement des ingredients allergenes  */}}
 
-{{- range $.Site.Data.ingredients -}}
-  {{- with .ingredients -}}
-    {{- range . -}}
-      {{ $ingredient := .title}}
-      {{- if .alergene -}}
-        {{ $alergene = $alergene | append $ingredient }}
-      {{- end -}}
-      {{- if eq .sans_lactose  false -}}
-        {{- $lactose = $lactose | append $ingredient -}}
-      {{- end -}}
-{{- if eq .sans_gluten false -}}
-{{ $gluten = $gluten | append $ingredient }}
-{{- end -}}
-{{- if eq .vegan false -}}
-{{ $novegan = $novegan | append $ingredient }}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-
-{{/*  Regroupement des ingredients allergenes  */}}
-
-{{ $allergenesList := slice "Gluten" "Crustacé" "Oeuf" "Poisson" "Viande" "Porc" "Arachides" "Soja" "Fruits à coque" "Céleri" "Moutarde" "Sésame" "Sulfites" "Lupin" "Produit laitier"  }}
-
+{{/*  Reccupération des données allergenesIng sur chaque ingrédients. Permet de faire évoluer la liste plutot que de la figer  */}}
+{{- $allergenesTypeList := slice -}}
+{{ range $.Site.Data.ingredients }}
+  {{- range .ingredients -}}
+    {{- if .alergenesIng -}}
+      {{- $allergenesTypeList = $allergenesTypeList | append .alergenesIng -}}
+    {{- end -}}
+  {{- end -}}
+  {{ end }}
+{{- $allergenesTypeList = $allergenesTypeList | uniq -}}
 
 {{ $sAllergenes := newScratch }}
-{{ $allergeneTypesToAppend := ""}}
-
 {{- range $.Site.Data.ingredients -}}
   {{- range .ingredients -}}
-    {{ $ingredient := . }}
     {{- if .alergenesIng -}}
-      {{- $thoseAllergenes := intersect .alergenesIng $allergenesList -}}
       {{- $ingTitle := .title -}}
-      {{ range $thoseAllergenes -}}
+      {{ range .alergenesIng -}}
            {{$sAllergenes.Add . (slice $ingTitle)}}
       {{ end }}    
     {{- end -}}
   {{- end -}}
 {{- end -}}
 
-{{ $allergenesDict := dict 
-  "Produit laitier" ($sAllergenes.Get "Produit laitier") 
-  "Gluten" ($sAllergenes.Get "Glutten") 
-  "Crustacé" ($sAllergenes.Get "Crustacé")
-  "Oeuf" ($sAllergenes.Get "Oeuf")
-  "Poisson" ($sAllergenes.Get "Poisson")
-  "Viande" ($sAllergenes.Get "Viande")
-  "Porc" ($sAllergenes.Get "Porc")
-  "Arachides" ($sAllergenes.Get "Arachides")
-  "Soja" ($sAllergenes.Get "Soja")
-  "Fruits à coque" ($sAllergenes.Get "Fruits à coque")
-  "Céleri" ($sAllergenes.Get "Céleri")
-  "Moutarde" ($sAllergenes.Get "Moutarde")
-  "Sésame" ($sAllergenes.Get "Sésame")
-  "Sulfites" ($sAllergenes.Get "Sulfites")
-  "Lupin" ($sAllergenes.Get "Lupin")
+{{ $allergenesDict := dict }}
+{{ $allergenesList := slice }}
+{{ range $allergenesTypeList }}
+  {{ $allergenesDict = merge $allergenesDict (dict . ($sAllergenes.Get .)) }}
+  {{ $allergenesList = append  ($sAllergenes.Get .) $allergenesList }}
+{{ end }}
 
-}}
-
-
-{{ range $key, $value := $allergenesDict }}
-<li>{{$key}} : {{range $value}} {{.}} - {{end}}</li>
-{{ end }} 
-
-
-
+{{ $allergenesLgList := slice "Poisson" "Oeuf" "Soja" "Sésame" "Moutarde" "Fruit à coque" "Céleri" "Crustacé" "Arachide" "Mollusque"}}
 
 <div id="app">
 {{/*  lien vers le CMS de la page  */}}
@@ -453,6 +436,7 @@
       {{ $checkYes = true }}
       {{ end }}
 
+      {{/*  TODO Ajouter proportion fixe : checkAlwaysOk  */}}
       {{ if eq $checkYes false }}
       {{ if $checkfor }}
         {{ if and 
@@ -469,10 +453,7 @@
     {{- end -}}
 
       {{/* reccupération des ingredients warning de la recette  */}}
-      {{- $alergeneRecette := slice -}}
-      {{- $lactoseRecette := slice -}}
-      {{- $glutenRecette := slice -}}
-      {{- $noveganRecette := slice -}}
+
       {{ $ingredientsL := slice }}
 
       {{- range $key, $value := .Params.ingredients -}}
@@ -480,105 +461,89 @@
       {{- range $index, $element := . -}}
       {{ $ingredientsL = $ingredientsL | append .title}}
       {{- end }}
-      {{- end -}} {{/* with */}}
+      {{- end -}} 
       {{- end -}}
 
-      {{- $alergeneRecette := intersect $alergene $ingredientsL -}}
-      {{- $glutenRecette := intersect $gluten $ingredientsL -}}
-      {{- $lactoseRecette := intersect $lactose $ingredientsL -}}
-      {{- $noveganRecette := intersect $novegan $ingredientsL -}}
+      
+    {{- $alertGluten := intersect $ingredientsL ($sAllergenes.Get "Gluten") -}}
+        
+    {{- $alertPorc := intersect $ingredientsL ($sAllergenes.Get "Porc") -}}
+    
+    {{- $alertLait := intersect $ingredientsL ($sAllergenes.Get "Produit laitier") -}}
+    
+    {{- $alertAutresAllergenes := slice -}}
+    {{ range $allergenesLgList }}
+      {{- $toAdd := intersect $ingredientsL ($sAllergenes.Get . ) -}}
+      {{- $alertAutresAllergenes = $alertAutresAllergenes | append  $toAdd -}}
+    {{ end }}
+    
+    {{/*  TODO ? → liste des type d'allergenes  */}}
+    {{- $alertTypesIng := slice -}}
+    {{ range $allergenesTypeList }}
+      {{- $toAdd := intersect $ingredientsL ($sAllergenes.Get . ) -}}
 
+      {{- $alertTypesIng = $alertTypesIng | append $toAdd -}}
+      
+    {{ end }}
+    
+    
       {{- $assiettesInit := .Params.plate -}}
-     
-      <div class="printonly small my-1">
+      {{/*  alert noprint  */}}
+        <div class="row justify-content-start mt-2 ">
+
+       <hr class="my-1 no-print">
         {{ if $alertQuantite }}
+        <div class="col-12 col-md-6 col-lg-6 col-xl-6 print-col-2 ">
+          <div class="card border-danger shadow small px-4 card-body print-nocard">
             {{ if not $checkYes }}
             <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-circle" "display" "inline" "fs" 4) }}
               Le nombre de couverts prévu est significativement différent de celui qui a été déclaré comme testé
               ({{$compareQuantite}}): les proportions
               sont peut-être à adapter pour certains ingrédients. </div>
             {{ end }}
+          </div>
+        </div>
         {{ end }}
+
       
-        {{- with (or ( $alergeneRecette ) ( $glutenRecette) ( $lactoseRecette) ( $noveganRecette)) -}}
-      
-            {{- with $alergeneRecette -}}
+        {{- with (or ( $alertAutresAllergenes ) ( $alertGluten) ( $alertLait) ( $alertPorc)) -}}
+        <div class="col-12 col-md-6 col-lg-6 col-xl-6 print-col-2">
+          <div class="card border-danger shadow small px-4 card-body print-nocard">
+            {{- with $alertAutresAllergenes -}}
             <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "fs" 3) }}
-              Ingrédients alergenes :
-              {{ delimit $alergeneRecette ", "}}
+              Allergènes divers:
+              <span class="fw-bold">{{ delimit $alertAutresAllergenes ", "}}</span>
             </div>
             {{- end -}}
-            {{- with $glutenRecette -}}
+            {{- with $alertGluten -}}
             <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "fs" 3) }}
-              Ingrédients contenant du gluten :
-              {{ delimit $glutenRecette ", "}}
+              Gluten :
+              <span class="fw-bold">{{ delimit $alertGluten ", "}}</span>
             </div>
             {{- end -}}
-            {{- with $lactoseRecette -}}
+            {{- with $alertLait -}}
             <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "fs" 3) }}
-              Ingrédients contenant du lactose :
-              {{ delimit $lactoseRecette ", "}}
+              Produits laitier :
+              <span class="fw-bold">{{ delimit $alertLait ", "}}</span>
             </div>
             {{- end -}}
-            {{- with $noveganRecette -}}
-            <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "fs" 3) }} Ingrédients
-              non-vegan:
-              {{ delimit $noveganRecette ", "}}
+            {{- with $alertPorc -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "fs" 3) }} Porc:
+              <span class="fw-bold">{{ delimit $alertPorc ", "}}</span>
             </div>
             {{- end -}}
+          </div>
+        </div>
         {{- end -}} 
       </div>
-      <hr class="mt-1">
+       
+      <hr class="my-1 printonly">
+   
 
-      <div class="row justify-content-center mt-2 no-print d-print-none">
-      
-        {{ if $alertQuantite }}
-        <div class="col-12 col-md-6 col-lg-6 col-xl-6  ">
-          <div class="card border-danger shadow small px-4 card-body">
-            {{ if not $checkYes }}
-            <p> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-circle" "display" "inline" "fs" 4) }}
-              Le nombre de couverts prévu est significativement différent de celui qui a été déclaré comme testé
-              ({{$compareQuantite}}): les proportions
-              sont peut-être à adapter pour certains ingrédients. </p>
-            {{ end }}
-          </div>
-        </div>
-        {{ end }}
-      
-        {{- with (or ( $alergeneRecette ) ( $glutenRecette) ( $lactoseRecette) ( $noveganRecette)) -}}
-        <div class="col-12 col-md-6 col-lg-6 col-xl-6">
-          <div class="card border-danger shadow small px-4 card-body">
-      
-            {{- with $alergeneRecette -}}
-            <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "fs" 3) }}
-              Ingrédients alergenes :
-              {{ delimit $alergeneRecette ", "}}
-            </div>
-            {{- end -}}
-            {{- with $glutenRecette -}}
-            <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "fs" 3) }}
-              Ingrédients contenant du gluten :
-              {{ delimit $glutenRecette ", "}}
-            </div>
-            {{- end -}}
-            {{- with $lactoseRecette -}}
-            <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "fs" 3) }}
-              Ingrédients contenant du lactose :
-              {{ delimit $lactoseRecette ", "}}
-            </div>
-            {{- end -}}
-            {{- with $noveganRecette -}}
-            <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "fs" 3) }} Ingrédients
-              non-vegan:
-              {{ delimit $noveganRecette ", "}}
-            </div>
-            {{- end -}}
-          </div>
-        </div>
-        {{- end -}} {{/* with alergene ... */}}
-      </div>
-      </div>
+    </div> 
     {{ end }} {{/* with site.GetPage $url */}}
+
+
       
     {{/* :::  ___LES INGREDIENTS  */}}
     <div id="IngredientsEtPreparation-recette" class="row" v-show="displayDetailsRecettes">
@@ -604,38 +569,58 @@
               
               {{ range $index, $element := . -}}
               <div class="small ps-2">
-              
-
 
                   {{/* Pour obtenir les quantité correspondant au nombres d'assiettes indiquées */}}
-                  <span class="fw-bold">{{ partial "components/ingredients" (dict "title" .title "alergene" $alergene)
+                  <span class="fw-bold">{{ partial "components/ingredients" (dict "title" .title "alergene" $allergenesList)
                     }}</span>
+                  
+            
 
-
-                  {{/* TODO : alergene parial */}}
                   {{ if .quantite }}
-                    {{ if or (eq .unit "Kg") (eq .unit "litre")}}
-                      : {{ $quantiteRepas := (float (div (mul (float .quantite) $assiettes ) $assiettesRecettes))}}
+                  :
+                  {{ $quantiteRepas := (float (div (mul (float .quantite) $assiettes ) $assiettesRecettes)) }}
+                  {{/*  renommage des unités  */}}
+                  {{ $unit := .unit }}
+                  {{ if eq .unit "grammes" }}
+                    {{ $unit = "gr."}}
+                  {{ else if and (eq .unit "unité") (gt $quantiteRepas 1) }}
+                    {{ $unit = "unités"}}
+                  {{ else if and (eq .unit "litre") (gt $quantiteRepas 1) }}
+                    {{ $unit = "litres" }}
+                  {{ end }}
+                    {{ if or (eq .unit "Kg") (eq .unit "litre") }}
                       {{ if lt $quantiteRepas 1}}
-                        {{ mul $quantiteRepas 1000 | math.Round }} {{/* XXX Retester */}}
+                        {{ mul $quantiteRepas 1000 | math.Round }} 
+                        {{/* XXX Retester */}}
                         {{ if eq .unit "litre"}}
                           {{ printf "ml" }}
                         {{ else if eq .unit "Kg"}}
                           {{ printf "gr."}}
                         {{ end }}
                       {{ else }}
-                      {{ $quantiteRepas | lang.FormatNumber 2 }} {{ .unit }}
-                      {{ end }}
+                        {{/*  Ne garder que 2 décimales, et les supprimer si = ",00 " */}}
+                        {{ $quantiteRepas | lang.FormatNumber 2 | strings.TrimRight "0" | strings.TrimRight ","}} {{$unit}}
+                      {{end}}
 
+                    {{ else if  or (eq .unit "grammes") (eq .unit "ml")}}
+                      {{ if gt (math.Ceil $quantiteRepas) 999}}
+                        {{ div $quantiteRepas 1000  | lang.FormatNumber 2 | strings.TrimRight "0" | strings.TrimRight ","}}
+                        {{ if eq .unit "ml"}}
+                         {{ printf "litres" }}
+                        {{ else if eq .unit "grammes"}}
+                         {{ printf "Kg"}}
+                        {{ end }}
+                      {{end}}
+                    
                     {{ else }}
-                      : {{ $quantiteRepas :=  (div (mul (float .quantite) $assiettes ) $assiettesRecettes)}}
-                      {{ if gt $quantiteRepas 0.49 }}
-                      {{ math.Round $quantiteRepas }} {{.unit}}
+                      {{ if and (gt $quantiteRepas 0.49) }}
+                        {{ math.Round $quantiteRepas }} {{$unit}}
+                       
                       {{ else }}
-                      {{ $quantiteRepas | lang.FormatNumber 2 }} {{.unit}}
+                        {{ $quantiteRepas | lang.FormatNumber 2 }}  {{$unit}}
                       {{ end }}
                     {{ end }}
-                    {{ end }}
+                  {{ end }}
               </div>
               {{ end }}
 
@@ -697,8 +682,8 @@
 
 
 <div class="py-5 no-print" id="TotalIngredients"><hr></div>
-<div class="container-fluid" >
-  <h3>Listes des {{ len $IngredientList }} Ingrédients présents dans les menus</h3>
+<div class="container-fluid " :class="{'no-print':!toPrint.ingredients}">
+  <h3 class="no-print">Listes des {{ len $IngredientList }} Ingrédients présents dans les menus</h3>
   <div class="row justify-content-evenly">
 
     {{/*  ::: _Sidebar Total ingredients  */}}
@@ -756,7 +741,7 @@
       </nav>
   
   {{/* ::: _Total INGREDIENTS   */}}
-  <div class="col  print-col-12 ms-3" :class="{'no-print':!toPrint.ingredients}">
+  <div class="col  print-col-12 ms-3" >
     {{/* :::  __FraisByDayRange  */}}
     {{ $fraisByRanges := slice | append  (dict "idR" "LegumesRanges" "titleR" "Fruits Legumes Frais" "iType" "Legumes" "thisRange" "legumesByRanges") (dict "idR" "AnimauxRanges" "titleR" "Viandes/Poissons Frais" "iType" "Animaux" "thisRange" "animauxByRanges") }}
 
@@ -935,6 +920,15 @@
     </div>  */}}
   
     {{ range sort $IngredientsTypesList "iType" "desc"}}
+    {{/*  Renommage des iType  */}}
+    {{ $iTypeName := .iType }}
+    {{ if eq .iType "Lof" }}
+    {{ $iTypeName = "LOF (Lait Oeuf Farine Huile)" }}
+    
+    {{ else if  eq .iType "Animaux"}}
+    {{ $iTypeName = "Viandes et Poissons" }}
+    {{ end }}
+
     <div 
       v-if="this.totalsIngredientsFiltered('{{.iType}}').length > 0"
       class="card my-2 mb-lg-6 avoid-break-inside  mb-3 print-nocard"
@@ -944,7 +938,7 @@
       >
       <div class="card-body">
         <div class="no-print">
-          <span class="fs-4"> {{.iType}} </span>
+          <span class="fs-4"> {{$iTypeName}} </span>
           <div class="my-2 float-end">
             <a
               class="btn btn-outline-secondary btn-sm text-muted "
@@ -1009,7 +1003,7 @@
             <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " v-if="!showAllColIngredients">
               <thead>
                 <tr>
-                  <th>Ingredients {{.iType}}</th>
+                  <th>Ingredients {{$iTypeName}}</th>
                   <th class="text-end">Total</th>
                   <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
                   <th class="printonly" v-show="printAddCol === '2' "></th>
@@ -1041,9 +1035,9 @@
               </tbody>
             </table>
             </div>
-          </div>
+    </div>
 
-          {{ end }}
+    {{ end }}
  
       </div>
     </div>
@@ -1380,6 +1374,8 @@ methods: {
 
 
   {{/* ::: __calculs des totaux des ingredients  */}}
+
+  {{/*  tableaux des ingredients filtrés en fonction des dates séléctionné et types  */}}
   filteredIngredients: function (iType, start, end) {
     // Récupérer la liste des ingrédients
     let ingredients = this.ingredients
@@ -1400,7 +1396,7 @@ methods: {
   },
 
 
- 
+ {{/*  Totals des ingredients filtré ...  */}}
   totalsIngredientsFiltered(iType, start, end) {
     return this.totalsIngredients(this.filteredIngredients(iType, start, end));
   },
@@ -1414,13 +1410,13 @@ methods: {
     return result;
   },
 
-
+{{/*  Calcul des totaux  */}}
   totalsIngredients: function (filteredIng) {
     const totals = [];
     const listQuantite = new Map();
 
     filteredIng.forEach((item) => {
-      // Vérifier si l'ingrédient est déjà présent dans la carte des quantités
+      // Vérifier si l'ingrédient est déjà présent dans la map des quantités
       if (!listQuantite.has(item.ingredient)) {
         // Si non, ajouter une entrée vide pour cet ingrédient
         listQuantite.set(item.ingredient, []);
@@ -1438,7 +1434,7 @@ methods: {
         // Sinon, ajouter une nouvelle quantité à la liste des quantités pour cet ingrédient
         listQuantite.get(item.ingredient).push({
           quantite: item.unit === 'grammes' ? this.convertToKg(item.quantite) : item.quantite,
-          unit: item.unit, {{/* TODO : vérifier */}}
+          unit: item.unit === 'grammes' ? 'Kg'  : item.unit, {{/* TODO : vérifier */}}
         });
       }
 
@@ -1455,13 +1451,15 @@ methods: {
       if (totals[item.ingredient].unitTotal === item.unit) {
         // Si oui, additionner la quantité à la totalité de l'ingrédient
         totals[item.ingredient].total += item.quantite;
-      } else if (item.unit === 'grammes' && totals[item.ingredient].unitTotal === 'Kg') {
+        } 
+      else if (item.unit === 'grammes' && totals[item.ingredient].unitTotal === 'Kg') {
         // Si les unités sont différentes (grammes et Kg), convertir la quantité en Kg avant de l'ajouter à la totalité
         const total = this.convertToKg(item.quantite);
         totals[item.ingredient].total += total;
         totals[item.ingredient].unitTotal = 'Kg';
+        } 
 
-      } else {
+      else {
         // Si les unités ne peuvent pas s'additionner ou sont de différentes natures, ajouter la quantité à la liste des quantités alternatives
         totals[item.ingredient] = {
           total: '?? →',
@@ -1469,7 +1467,7 @@ methods: {
       }
 
       // Arrondir à 2 décimales
-      if (typeof totals[item.ingredient].total === 'number' && totals[item.ingredient].total > 0) {
+      if ( totals[item.ingredient].total > 0) {
         const rounded = totals[item.ingredient].total;
         totals[item.ingredient].total = Math.round(rounded * 100) / 100;
       } else if (totals[item.ingredient].total === '?? →') {
