@@ -12,7 +12,6 @@
 <!-- Liste qui contiendra qui contient les listes de recettes pour chaque date -->
 {{- $recettesList := slice -}}
 
-{{/*  TODO  */}}
 {{- $IngredientsNamesList := slice -}}
 
 {{- $IngredientsTypesList := slice -}}
@@ -576,8 +575,6 @@
                   {{/* Pour obtenir les quantité correspondant au nombres d'assiettes indiquées */}}
                   <span class="fw-bold">{{ partial "components/ingredients" (dict "title" .title "alergene" $allergenesList)
                     }}</span>
-                  
-            
 
                   {{ if .quantite }}
                   :
@@ -606,17 +603,23 @@
                       {{end}}
 
                     {{ else if  or (eq .unit "grammes") (eq .unit "ml")}}
+                      {{/* BUG : les quantité ne s'affiche plus du tout a certain endroit (partout ou grammes et ml ?)    */}}
                       {{ if gt (math.Ceil $quantiteRepas) 999}}
                         {{ div $quantiteRepas 1000  | lang.FormatNumber 2 | strings.TrimRight "0" | strings.TrimRight ","}}
                         {{ if eq .unit "ml"}}
-                         {{ printf "litres" }}
+                          {{ printf "litres" }}
                         {{ else if eq .unit "grammes"}}
-                         {{ printf "Kg"}}
-                        {{ end }}
+                          {{ printf "Kg"}}
+                        {{ end }} 
+                         
+                      {{ else if lt $quantiteRepas 1}}
+                        {{ $quantiteRepas | lang.FormatNumber 2 | strings.TrimRight "0" | strings.TrimRight ","}} {{$unit}}
+                      {{ else }}
+                        {{ math.Round $quantiteRepas }} {{$unit}}
                       {{end}}
                     
                     {{ else }}
-                      {{ if and (gt $quantiteRepas 0.49) }}
+                      {{ if gt $quantiteRepas 0.49 }}
                         {{ math.Round $quantiteRepas }} {{$unit}}
                        
                       {{ else }}
@@ -709,9 +712,9 @@
                 <button class="btn btn-primary btn-sm shadow-sm text-white" @click="datesReset" type="button" id="btn-allDate">Toutes les dates</button>
               </div>
             </div>
-
+            <hr>
             <div class="mb-3">
-              Afficher les quantités des produits frais par périodes →
+              Afficher les quantités des produits frais par périodes 
             </div>
             <div class="input-group mb-3">
               <input type="number" v-model="daysPerRange" class="form-control" min="1" max="9" @input="changeDateRanges"
@@ -723,10 +726,13 @@
               <label for="cb-legumesByRanges">... pour les fruits et legumes frais </label>
             </div>
             <div class="mb-1 form-check form-switch">
+              <input type="checkbox" class="form-check-input" v-model="fraisByRanges" name="cb-fraisByRanges" id="cb-fraisByRanges">
+              <label for="cb-fraisByRanges">... pour les autres produit frais (laitiers...)</label>
+            </div>
+            <div class="mb-1 form-check form-switch">
               <input type="checkbox" class="form-check-input" v-model="animauxByRanges" name="cb-animauxByRanges" id="cb-animauxByRanges">
               <label for="cb-animauxByRanges">... pour les viandes et poissons </label>
             </div>
-
 
             <hr>
             <div class="form-check form-switch mb-3">
@@ -740,20 +746,76 @@
 
         </div>
   
-  
       </nav>
   
-  {{/* ::: _Total INGREDIENTS   */}}
+  {{/* ::: Total INGREDIENTS   */}}
   <div class="col  print-col-12 ms-3" >
+
     {{/* :::  __FraisByDayRange  */}}
-    {{ $fraisByRanges := slice | append  (dict "idR" "LegumesRanges" "titleR" "Fruits Legumes Frais" "iType" "Legumes" "thisRange" "legumesByRanges") (dict "idR" "AnimauxRanges" "titleR" "Viandes/Poissons Frais" "iType" "Animaux" "thisRange" "animauxByRanges") }}
+    {{ $fraisByRanges := slice | append  (dict "idR" "LegumesRanges" "titleR" "Fruits Legumes Frais" "iType" "Legumes" "thisRange" "legumesByRanges") (dict "idR" "AnimauxRanges" "titleR" "Viandes/Poissons Frais" "iType" "Animaux" "thisRange" "animauxByRanges") (dict "idR" "FraisRanges" "titleR" "Autres produits Frais" "iType" "Frais" "thisRange" "fraisByRanges") }}
 
     {{ range $fraisByRanges }}
-
+    
     <div id="{{.idR}}" class="">
       <template v-for="(range, index) in rangesDates">
+
+      {{/*  :::___table Frais sans detail  */}}
         <div 
-        v-if="totalsIngredientsFiltered('{{.iType}}', range[0], range[range.length - 1] ).length > 0 && {{.thisRange}} "
+        v-show="{{.thisRange}}"
+       
+        class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
+        :class="{'no-print':!toPrint.LegumesRanges }"
+        :id="range[0]"
+        >  {{/*  computeTotalQIFiltered('{{.iType}}', range[0], range[range.length -1] ).length > 0 &&   */}}
+        <div class="card-body">
+          <div class="no-print">
+            <span class="fs-5"> {{.titleR}} du [[ range[0] ]] au [[range[range.length - 1] ]] </span>
+            <div class="my-2 float-end">
+              <a
+                class="btn btn-outline-secondary btn-sm text-muted "
+                role="button"
+                @click="printThis('range', 'ingredients')"
+                >{{ partial "inline-svg" (dict "src" "fonticons/printer"  "fs" 3) }}</a>
+            </div>
+          </div>
+    
+          <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " > 
+            {{/*  v-show="!showAllColIngredients"  */}}
+            <thead>
+              <tr>
+                <th>{{.iType}}</th>
+                <th class="text-end">Total</th>
+                <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
+                <th class="printonly" v-show="printAddCol === '2' "></th>
+              </tr>
+            </thead>
+            <tbody>
+              {{/*  TODO : Optimisation : la fonction computeTotalQIFiltered() est appelé en boucle pour CHAQUE tableau.   */}}
+              <template v-for="(totals, ingredient) in computeTotalQIFilteredND('{{ .iType }}', range[0], range[range.length -1])">
+                <tr>
+                <td>[[ingredient]]</td>
+                <td class="text-end print-td-mw-15">
+                  <template v-for="(quantite, index) in totals" >
+                    <span v-if="quantite.unitTotal !== ''">[[Math.round(quantite.qTotal * 100 ) / 100]] [[quantite.unitTotal]]</span>
+                    <span v-else class="small">... [[quantite.qTotal]] plats ([[quantite.totalAssiettes]] couverts)</span>
+                    <span v-if="index !== totals.length - 1"> + </span>
+                  </template>
+                </td>
+                <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15"></td>
+                <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
+              </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+
+    {{/*  ::: ___table Frais Détaillé  */}}
+    {{/*  BUG : totalsAndDetailIngredientsFiltered() semble sensible au datepicker   */}}
+      <div 
+        v-show="computeTotalQIFiltered('{{.iType}}', range[0], range[range.length -1] ).length > 0 && showAllColIngredients && {{.thisRange}}"
         class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
         :class="{'no-print':!toPrint.LegumesRanges }"
         :id="range[0]"
@@ -769,47 +831,8 @@
                 >{{ partial "inline-svg" (dict "src" "fonticons/printer"  "fs" 3) }}</a>
             </div>
           </div>
-    
-          {{/*  ::: ___ table range Frais sans detail  */}}
 
-          <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " v-if="!showAllColIngredients">
-            <thead>
-              <tr>
-                <th>{{.iType}}</th>
-                <th class="text-end">Total</th>
-                <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
-                <th class="printonly" v-show="printAddCol === '2' "></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in totalsIngredientsFiltered('{{.iType}}', range[0], range[range.length - 1])"
-                >
-                <template v-if="item.total">
-                  <td>[[item.ingredient]]</td>
-
-                <td class="text-end print-td-mw-15">
-                  [[item.total]]
-                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
-                  <span v-if="Array.isArray(item.fallbackTotal)">
-                    <template v-for="(fallback, index) in item.fallbackTotal">
-                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
-                      <template v-if="index !== item.fallbackTotal.length - 1">
-                        <span> + </span>
-                      </template>
-                    </template>
-                  </span>
-                </td>
-                <td v-show="printAddCol === '1' || printAddCol ===  '2'  " class="printonly print-td-15 "></td>
-                <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
-                </template>
-
-              </tr>
-            </tbody>
-          </table>
-    
-          {{/*  ::: ___ table range Frais Avec detail  */}}
-
-          <table class="table table-bordered table-responsive" v-if="showAllColIngredients">
+          <table id="tableFraisDetail" class="table table-bordered table-responsive">
             <thead>
               <tr>
                 <th>Ingredients {{.iType}} </th>
@@ -817,14 +840,14 @@
                 <th class="text-end">Total</th>
                 <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
                 <th class="printonly" v-show="printAddCol === '2' "></th>
-         
               </tr>
             </thead>
+
             <tbody>
               <tr v-for="item in totalsAndDetailIngredientsFiltered('{{ .iType }}', range[0], range[range.length - 1])"
-                :class="{'table-secondary fw-bold': item.total}"
+                :class="{'table-secondary fw-bold': item.qTotal}"
                 >
-                <td :class="{'small text-muted': !item.total}">[[item.ingredient]]</td>
+                <td :class="{'small text-muted': !item.qTotal}">[[item.ingredient]]</td>
                 <td v-if="item.recette" class="small">
                   <span class="fw-bold">[[item.recette]]</span> le [[new Date (item.dateService).toISOString().substr(0, 10)]] /
                   [[item.horaire]] <br> pour [[item.assiettes]] couverts
@@ -832,112 +855,36 @@
                 </td>
                 <td v-else></td>
                 <td class="text-end">
-                  [[item.total]]
-                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
-                  <span v-if="Array.isArray(item.fallbackTotal)">
-                    <template v-for="(fallback, index) in item.fallbackTotal">
-                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
-                      <template v-if="index !== item.fallbackTotal.length - 1">
-                        <span> + </span>
-                      </template>
-                    </template>
-                  </span>
+                  <span>[[item.qTotal]] [[item.unitTotal]]</span>
                 </td>
                 <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15" ></td>
                 <td v-show=" printAddCol ===  '2' || printAddCol ===  '3' " class="printonly print-td-15" ></td>
-      
               </tr>
-     
 
             </tbody>
           </table>
           </div>
           </div>
         </template>
+      </div>
     {{ end }}
 
- 
 
-      
-    </div>
-
-    {{/*  <div id="LegumesRanges" class="">
-      <template v-for="(range, index) in rangesDates">
-        <div 
-        v-if="totalsIngredientsFiltered('Legumes', range[0], range[range.length - 1] ).length > 0 && legumesByRanges"
-        class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
-        :class="{'no-print':!toPrint.LegumesRanges }"
-        :id="range[0]"
-  
-        >
-        <div class="card-body">
-          <div class="no-print">
-            <span class="fs-5"> Fruits et Legumes Frais du [[ range[0] ]] au [[range[range.length - 1] ]] </span>
-            <div class="my-2 float-end">
-              <a
-                class="btn btn-outline-secondary btn-sm text-muted "
-                role="button"
-                @click="printThis('range', 'ingredients')"
-                >{{ partial "inline-svg" (dict "src" "fonticons/printer"  "fs" 3) }}</a>
-            </div>
-          </div>
-          <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " v-if="!showAllColIngredients">
-            <thead>
-              <tr>
-                <th>Fruits et Legumes Frais</th>
-                <th class="text-end">Total</th>
-                <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
-                <th class="printonly" v-show="printAddCol === '2' "></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in totalsIngredientsFiltered('Legumes', range[0], range[range.length - 1])"
-                >
-                <template v-if="item.total">
-                  <td>[[item.ingredient]]</td>
-
-                <td class="text-end print-td-mw-15">
-                  [[item.total]]
-                  <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
-                  <span v-if="Array.isArray(item.fallbackTotal)">
-                    <template v-for="(fallback, index) in item.fallbackTotal">
-                      <span>[[fallback.quantite]] [[fallback.unit]]</span>
-                      <template v-if="index !== item.fallbackTotal.length - 1">
-                        <span> + </span>
-                      </template>
-                    </template>
-                  </span>
-                </td>
-                <td v-show="printAddCol === '1' || printAddCol ===  '2'  " class="printonly print-td-15 "></td>
-                <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
-                </template>
-
-              </tr>
-            </tbody>
-          </table>
-          </div>
-          </div>
-        </template>
-
-      
-    </div>  */}}
-  
-    {{ range sort $IngredientsTypesList "iType" "desc"}}
     {{/*  Renommage des iType  */}}
-    {{ $iTypeName := .iType }}
+    {{ range sort $IngredientsTypesList "iType" "desc"}}
+      {{ $iTypeName := .iType }}
     {{ if eq .iType "Lof" }}
-    {{ $iTypeName = "LOF (Lait Oeuf Farine Huile)" }}
-    
+      {{ $iTypeName = "LOF (Lait Oeuf Farine Huile)" }}
     {{ else if  eq .iType "Animaux"}}
-    {{ $iTypeName = "Viandes et Poissons" }}
+      {{ $iTypeName = "Viandes et Poissons" }}
     {{ end }}
 
+    {{/*  ::: _ Card des tableau ingredients petit et grand  */}}
     <div 
-      v-if="this.totalsIngredientsFiltered('{{.iType}}').length > 0"
+      v-show="this.computeTotalQIFiltered('{{.iType}}').length > 0"
       class="card my-2 mb-lg-6 avoid-break-inside  mb-3 print-nocard"
       :class="{'no-print':!toPrint.{{.iType}} }"
       id="{{.iType}}"
-
       >
       <div class="card-body">
         <div class="no-print">
@@ -957,87 +904,97 @@
         </div>
   
   
-            {{/* ::: __Table avec Details des recettes  */}}
-  
-            <table class="table table-bordered table-responsive" v-if="showAllColIngredients">
-              <thead>
-                <tr>
-                  <th>Ingredients {{.iType}} </th>
-                  <th class="text-center">Recettes</th>
-                  <th class="text-end">Total</th>
-                  <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
-                  <th class="printonly" v-show="printAddCol === '2' "></th>
-           
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in totalsAndDetailIngredientsFiltered('{{ .iType }}', 'ingredients')"
-                  :class="{'table-secondary fw-bold': item.total}"
-                  >
-                  <td :class="{'small text-muted': !item.total}">[[item.ingredient]]</td>
-                  <td v-if="item.recette" class="small">
-                    <span class="fw-bold">[[item.recette]]</span> le [[new Date (item.dateService).toISOString().substr(0, 10)]] /
-                    [[item.horaire]] <br> pour [[item.assiettes]] couverts
-                    <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span>
-                  </td>
-                  <td v-else></td>
-                  <td class="text-end">
-                    [[item.total]]
-                    <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
-                    <span v-if="Array.isArray(item.fallbackTotal)">
-                      <template v-for="(fallback, index) in item.fallbackTotal">
-                        <span>[[fallback.quantite]] [[fallback.unit]]</span>
-                        <template v-if="index !== item.fallbackTotal.length - 1">
-                          <span> + </span>
-                        </template>
-                      </template>
-                    </span>
-                  </td>
-                  <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15" ></td>
-                  <td v-show=" printAddCol ===  '2' || printAddCol ===  '3' " class="printonly print-td-15" ></td>
-        
-                </tr>
-       
+        {{/* ::: __Table détaillé des ingrédients   */}}
+        <table class="table table-bordered table-responsive" v-if="showAllColIngredients">
+          <thead>
+            <tr>
+              <th>Ingredients {{.iType}} </th>
+              <th class="text-center">Recettes</th>
+              <th class="text-end">Total</th>
+              <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
+              <th class="printonly" v-show="printAddCol === '2' "></th>
+            </tr>
+          </thead>
 
-              </tbody>
-            </table>
+          <tbody>
+            <tr v-for="item in totalsAndDetailIngredientsFiltered('{{ .iType }}', 'ingredients')"
+              :class="{'table-secondary fw-bold': item.qTotal}"
+              >
+              <td :class="{'small text-muted': !item.qTotal}">[[item.ingredient]]</td>
+              <td v-if="item.recette" class="small">
+                <span class="fw-bold">[[item.recette]]</span> le [[new Date (item.dateService).toISOString().substr(0, 10)]] /
+                [[item.horaire]] <br> pour [[item.assiettes]] couverts
+                <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span>
+              </td>
+              <td v-else></td>
+              <td class="text-end">
+                <span>[[item.qTotal]] [[item.unitTotal]]</span>
+              </td>
+              <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15" ></td>
+              <td v-show=" printAddCol ===  '2' || printAddCol ===  '3' " class="printonly print-td-15" ></td>
+            </tr>
+          </tbody>
+        </table>
+        
+
+        {{/* ::: __Table Sans Details des ingredients */}}
+        <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " v-if="!showAllColIngredients">
+          <thead>
+            <tr>
+              <th>Ingredients {{$iTypeName}}</th>
+              <th class="text-end">Total</th>
+              {{/*  ajout optionnel des colonnes aux tableaux pour les impressions  */}}
+              <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
+              <th class="printonly" v-show="printAddCol === '2' "></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{/*  Itération sur tous les ingredients filtrés par type  */}}
+            <template v-for="(totals, ingredient) in computeTotalQIFilteredND('{{ .iType }}')">
+              <tr>
+              <td>[[ingredient]]</td>
+              <td class="text-end print-td-mw-15">
+                <template v-for="(quantite, index) in totals" >
+                  <span v-if="quantite.unitTotal !== ''">[[Math.round(quantite.qTotal * 100 ) / 100]] [[quantite.unitTotal]]</span>
+                  <span v-else class="small">... [[quantite.qTotal]] plats ([[quantite.totalAssiettes]] couverts)</span>
+                  <span v-if="index !== totals.length - 1"> + </span>
+                </template>
+              </td>
+              <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15"></td>
+              <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
+            </tr>
+            </template>
+          </tbody>
+        </table>
+     
+        {{/*  TEST table bak  */}}
+      {{/*  <table class="table table-bordered-bottom table-responsive table-striped print-border-1 "   v-if="!showAllColIngredients">
+          <thead>
+            <tr>
+              <th>Ingredients {{$iTypeName}}</th>
+              <th class="text-end">Total</th>
+              <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
+              <th class="printonly" v-show="printAddCol === '2' "></th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="(item, index) in computeTotalQIFiltered('{{ .iType }}')">
+              <tr>
+              <td>[[item.ingredient]]</td>
+              
+              <td class="text-end print-td-mw-15">
+                  
+                <span v-if="item.total.lenght === 0" class="small">? : [[item.total]] recettes</span>
+                <span v-else>[[item.total]] [[item.unitTotal]]</span>
+              
+              </td>
+              <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15"></td>
+              <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
   
-            {{/* ::: __Table Sans Details des recettes */}}
-            <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " v-if="!showAllColIngredients">
-              <thead>
-                <tr>
-                  <th>Ingredients {{$iTypeName}}</th>
-                  <th class="text-end">Total</th>
-                  <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
-                  <th class="printonly" v-show="printAddCol === '2' "></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in totalsIngredientsFiltered('{{ .iType }}')"
-                  >
-                  <template v-if="item.total">
-                    <td>[[item.ingredient]]</td>
-  
-                  <td class="text-end print-td-mw-15">
-                    [[item.total]]
-                    <span v-if="item.total !== 'non présisé' && item.total !== 'Incalculable ...'">[[item.unitTotal]]</span>
-                    <span v-if="Array.isArray(item.fallbackTotal)">
-                      <template v-for="(fallback, index) in item.fallbackTotal">
-                        <span>[[fallback.quantite]] [[fallback.unit]]</span>
-                        <template v-if="index !== item.fallbackTotal.length - 1">
-                          <span> + </span>
-                        </template>
-                      </template>
-                    </span>
-                  </td>
-                  <td v-show="printAddCol === '1' || printAddCol ===  '2'  " class="printonly print-td-15 "></td>
-                  <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
-                  </template>
-  
-                </tr>
-              </tbody>
-            </table>
-            </div>
+            </tr>
+          </tbody>
+        </table>  */}}
+      </div>
     </div>
 
     {{ end }}
@@ -1119,16 +1076,14 @@
         },
 
         printAddCol: [],
-    
 
         {{/*  printAffiches: false,  */}}
-
 
         IngredientsTypesList: [{{ range $IngredientsTypesList }} {{ .iType }}, {{ end }} ],
       
         rangesDates: [], // Tableau pour stocker les tranches de dates
         daysPerRange: 3,
-        cbFraisByRanges: false,
+        fraisByRanges: false,
         legumesByRanges: false,
         animauxByRanges: false,
         
@@ -1211,7 +1166,7 @@ computed: {
   {{/*  #USELESS #TODO : faire le calcul en dure avec Hugo  → au moins pour le produit en croix*/}}
   ingredients: function () {
     return this.ingredientsRecettes.map(ingredient => {
-      let quantite = this.computeQuantite(ingredient);
+      let quantite = this.roundQuantite(ingredient);
       return {
         ... ingredient,
         quantite: quantite,
@@ -1220,8 +1175,8 @@ computed: {
   },
 
 
-  {{/*  totalsIngredientsFrais3Days: function (){
-    const totalsIngredientFiltered = totalsIngredientsFiltered(Frais)
+  {{/*  computeTotalQIFrais3Days: function (){
+    const totalsIngredientFiltered = computeTotalQIFiltered(Frais)
   },  */}}
 
 
@@ -1233,7 +1188,6 @@ computed: {
 
 {{/*  ::: watch  */}}
 watch: {
-
   endDateSelected: function () {
     /* Ajoute un jour a la endDateSelected, pour que les derniers jours soit bien pris en compte par le filtre opéré dans totalsIngredientFiltered. 
     Meme fonction dans mounted() pour l'initialisation ! Doit etre dans watch() sinon les changement de endDateSelected ne sont pas pris en compte... */ 
@@ -1326,8 +1280,15 @@ methods: {
    
   },
 
-  computeQuantite: function (ingredient) {
-   // Recalcule les quantité d'ingredients en fonctions du nombre d'assietes prévues  
+  DateAddDays(dateDebug) {
+    dateDebug = new Date(dateDebug);
+    dateDebug.setDate(dateDebug.getDate() + 1);
+    return dateDebug;
+  },
+
+  roundQuantite: function (ingredient) {
+    // Arrondir les quantité et convertir gr → Kg etc.. 
+    {{/*  TODO : faire le calcul en dure avec Hugo  */}}
     let x = (Number(ingredient.quantite));
     if (typeof ingredient.quantite != "number") {
       ingredient.quantite = '-';
@@ -1340,7 +1301,7 @@ methods: {
         ingredient.quantite = ingredient.quantite / 1000      
       }
     } else {
-      ingredient.quantite = Math.round(x * 10) / 10;
+      ingredient.quantite = Math.round(x * 100) / 100;
     }
     return ingredient.quantite;
   },
@@ -1359,15 +1320,16 @@ methods: {
     
     let currentRange = [];
     this.rangesDates = [];
-  
+    // split dates
     for (let i = 0; i < this.datesRepas.length; i++) {
       currentRange.push(this.datesRepas[i]);
-  
-      if (currentRange.length > Number(newDaysPerRange)) {
+      // push the current range
+      if (currentRange.length >= Number(newDaysPerRange)) {
         this.rangesDates.push([...currentRange]);
         currentRange = [];
       }
     }
+      // push the last range
       if (currentRange.length > 0) {
       this.rangesDates.push([...currentRange]);
     }
@@ -1383,16 +1345,16 @@ methods: {
     // Récupérer la liste des ingrédients
     let ingredients = this.ingredients
 
-    // Si pas de valeurs definies, alors les dates sont celles du datepicker
+     // Si pas de valeurs definies, alors les dates sont celles du datepicker
     var start = start ?? this.startDateSelected ;
-    var end = end ?? this.endDateSelected;
+    var end = end ?? this.endDateSelectedDebug;
   
     // Filtrer les ingrédients selon les critères spécifiés
     const filtered = ingredients.filter(
       (i) =>
         i.ingredientType === iType &&
         i.dateService >= start &&
-        i.dateService <= end &&
+        i.dateService <=end &&
         i.ingredient.toLowerCase().includes(this.search.toLowerCase())
     );
     return filtered
@@ -1400,12 +1362,25 @@ methods: {
 
 
  {{/*  Totals des ingredients filtré ...  */}}
-  totalsIngredientsFiltered(iType, start, end) {
-    return this.totalsIngredients(this.filteredIngredients(iType, start, end));
+  computeTotalQIFiltered(iType, start, end) {
+    
+    // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. 
+    const debugDate = end !== undefined ? this.DateAddDays(end) : undefined;
+    const endDebug  = debugDate !== undefined ? debugDate.toISOString().slice(0, 10) : undefined;
+
+    return this.computeTotalQI(this.filteredIngredients(iType, start, endDebug));
   },
 
-  totalsAndDetailIngredientsFiltered(iType) {
-    const total = this.totalsIngredients(this.filteredIngredients(iType));
+  computeTotalQIFilteredND(iType, start, end) {
+    // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. 
+    const debugDate = end !== undefined ? this.DateAddDays(end) : undefined;
+    const endDebug  = debugDate !== undefined ? debugDate.toISOString().slice(0, 10) : undefined;
+    
+    return this.computeTotalQuantite(this.filteredIngredients(iType, start, endDebug));
+  },
+
+  totalsAndDetailIngredientsFiltered(iType, start, end) {
+    const total = this.computeTotalQI(this.filteredIngredients(iType));
     const element = this.filteredIngredients(iType);
 
     const result = new Set([...element, ...total].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
@@ -1413,89 +1388,86 @@ methods: {
     return result;
   },
 
-{{/*  Calcul des totaux  */}}
-  totalsIngredients: function (filteredIng) {
-    const totals = [];
-    const listQuantite = new Map();
+  computeTotalQI(filteredIng) {
+  const totals = {};
+
+  filteredIng.forEach((item) => {
+    {{/*  TODO : optimisation  */}}
+    if (item.unit === 'grammes') {
+      item.quantite = item.quantite / 1000 ;
+      item.unit = 'Kg';
+    }
+    if (item.unit === 'ml') {
+      item.quantite = item.quantite / 1000 ;
+      item.unit = 'litre';
+    }
+    const { ingredient, quantite, unit } = item;
+    const key = `${ingredient}_${unit}`;
+  
+    if (!totals[key]) {
+      totals[key] = {
+          ingredient,
+        unitTotal: unit,
+        qTotal: quantite !== 0 ? quantite : 1
+      };
+      } else {
+        totals[key].qTotal += quantite !== 0 ? quantite : 1;
+    }
+  });
+  
+    return Object.entries(totals).map(([key, { ingredient, unitTotal, qTotal, ...item }]) => {
+      const [ingredientKey, unitKey] = key.split('_');
+      return {
+        ingredient,
+        unitTotal,
+        qTotal: Math.round(qTotal * 100) / 100,
+        ...item
+      };
+    }).sort((a, b) => a.ingredient.localeCompare(b.ingredient));
+  
+  },
+
+  computeTotalQuantite(filteredIng) {
+    const finalTotals = {};
 
     filteredIng.forEach((item) => {
-      // Vérifier si l'ingrédient est déjà présent dans la map des quantités
-      if (!listQuantite.has(item.ingredient)) {
-        // Si non, ajouter une entrée vide pour cet ingrédient
-        listQuantite.set(item.ingredient, []);
+      if (item.unit === 'grammes') {
+        item.quantite = item.quantite / 1000 ;
+        item.unit = 'Kg';
+      }
+      if (item.unit === 'ml') {
+        item.quantite = item.quantite / 1000 ;
+        item.unit = 'litre';
+      }
+      const { ingredient, quantite, unit, assiettes } = item;
+  
+      if (!finalTotals[ingredient]) {
+        finalTotals[ingredient] = [];
       }
 
-      // Vérifier si une quantité avec la même unité existe déjà pour cet ingrédient
-      const existingQuantity = listQuantite
-        .get(item.ingredient)
-        .find((quantity) => quantity.unit === item.unit);
-
-      if (existingQuantity) {
-        // Si une quantité existe déjà, additionner la quantité actuelle à celle existante
-        existingQuantity.quantite += item.quantite;
+      finalTotals[ingredient].totalAssiettes += assiettes;
+      
+      const existingItem = finalTotals[ingredient].find((item) => item.unitTotal === unit);
+      if (existingItem) {
+        existingItem.qTotal += quantite !== 0 ? quantite : 1;
+        existingItem.totalAssiettes += assiettes;
       } else {
-        // Sinon, ajouter une nouvelle quantité à la liste des quantités pour cet ingrédient
-        listQuantite.get(item.ingredient).push({
-          quantite: item.unit === 'grammes' ? this.convertToKg(item.quantite) : item.quantite,
-          unit: item.unit === 'grammes' ? 'Kg'  : item.unit, {{/* TODO : vérifier */}}
+        finalTotals[ingredient].push({
+          unitTotal: unit,
+          qTotal: quantite !== 0 ? quantite : 1,
+          totalAssiettes: assiettes,
+
         });
       }
-
-      // Vérifier si l'ingrédient existe déjà dans les totaux
-      if (!totals[item.ingredient]) {
-        // Si non, initialiser les totaux pour cet ingrédient
-        totals[item.ingredient] = {
-          unitTotal: item.unit,
-          total: 0,
-        };
-      }
-
-      // Vérifier si l'unité de l'ingrédient correspond à l'unité actuelle
-      if (totals[item.ingredient].unitTotal === item.unit) {
-        // Si oui, additionner la quantité à la totalité de l'ingrédient
-        totals[item.ingredient].total += item.quantite;
-        } 
-      else if (item.unit === 'grammes' && totals[item.ingredient].unitTotal === 'Kg') {
-        // Si les unités sont différentes (grammes et Kg), convertir la quantité en Kg avant de l'ajouter à la totalité
-        const total = this.convertToKg(item.quantite);
-        totals[item.ingredient].total += total;
-        totals[item.ingredient].unitTotal = 'Kg';
-        } 
-
-      else {
-        // Si les unités ne peuvent pas s'additionner ou sont de différentes natures, ajouter la quantité à la liste des quantités alternatives
-        totals[item.ingredient] = {
-          total: '?? →',
-        };
-      }
-
-      // Arrondir à 2 décimales
-      if ( totals[item.ingredient].total > 0) {
-        const rounded = totals[item.ingredient].total;
-        totals[item.ingredient].total = Math.round(rounded * 100) / 100;
-      } else if (totals[item.ingredient].total === '?? →') {
-        // Si le total est incalculable, utiliser la liste des quantités alternatives
-        totals[item.ingredient] = {
-          total: '?? →',
-          fallbackTotal: listQuantite.get(item.ingredient).map((quantity) => ({
-            quantite: Math.round(quantity.quantite * 100) / 100,
-            unit: quantity.unit,
-          })),
-        };
-      } else {
-        // Si le total n'est pas un nombre valide, le définir comme "non précisé"
-        totals[item.ingredient].total = 'non précisé';
-      }
     });
-
-    // Retourner les totaux des ingrédients filtrés (trié par noms d'ingredients)
-    return Object.entries(totals).map(([ingredient, { unitTotal, total, fallbackTotal, ...item }]) => ({
-      ingredient,
-      unitTotal,
-      total,
-      fallbackTotal,
-      ...item,
-    })).sort((a, b) => a.ingredient.localeCompare(b.ingredient));
+  
+    const result = {};
+  
+    Object.keys(finalTotals).forEach((ingredient) => {
+      result[ingredient] = finalTotals[ingredient].sort((a, b) => a.unitTotal.localeCompare(b.unitTotal));
+    });
+  
+    return result;
   },
 
   {{/* TODO To computed ?  */}}
@@ -1503,9 +1475,9 @@ methods: {
     return [...new Set (this.ingredients.map(ingredient => ingredient.ingredientType))];
   },
 
-  {{/* :::__ ingredientsByRanges  */}}
-  fraisByRanges() {
-    if (this.cbFraisByRanges  === "true") {
+  {{/*  TODO pour print?__ ingredientsByRanges  */}}
+  {{/*  fraisByRangesDays() {
+    if (this.fraisByRanges  === "true") {
     this.legumesByRanges = true;
     this.animauxByRanges = "true";
     }
@@ -1514,7 +1486,7 @@ methods: {
       this.animauxByRanges = "false";
     
     }
-  }
+  }  */}}
 
 {{/*  USELESS ?
   filteredResultsCount(iType) {
