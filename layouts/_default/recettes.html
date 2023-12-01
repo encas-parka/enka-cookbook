@@ -6,49 +6,58 @@
 <span class="no-print text-muted">{{ hugo.Environment }} |  Layout : layouts/_default/recettes.html </span>
 {{- end -}}
 
-{{/* Reccupération des donnée ingredient alergene */}}
-{{ $alergene := slice }}
-{{ $lactose := slice }}
-{{ $gluten := slice }}
-{{ $novegan := slice }}
 
-  {{- range $.Site.Data.ingredients -}}
-    {{- with .ingredients -}}
-    {{- range . -}}
-      {{ $ingredient := .title}}
-          {{- if eq .alergene true -}}
-            {{ $alergene = $alergene | append $ingredient }}
-          {{- end -}}
-          {{- if eq .sans_lactose false -}}
-            {{- $lactose = $lactose | append $ingredient -}}  
-          {{- end -}}        
-          {{- if eq .sans_gluten false -}}
-            {{ $gluten = $gluten | append $ingredient }}  
-          {{- end -}}        
-          {{- if eq .vegan false -}}
-            {{ $novegan = $novegan | append $ingredient }}  
-          {{- end -}}        
-      {{- end -}}
+{{/*  Reccupération des données allergenesIng sur chaque ingrédients. Permet de faire évoluer la liste plutot que de la figer  */}}
+{{- $allergenesTypeList := slice -}}
+{{ range $.Site.Data.ingredients }}
+  {{- range .ingredients -}}
+    {{- if .alergenesIng -}}
+      {{- $allergenesTypeList = $allergenesTypeList | append .alergenesIng -}}
     {{- end -}}
   {{- end -}}
-  
-{{ $ingredients := slice }}
+  {{ end }}
+{{- $allergenesTypeList = $allergenesTypeList | uniq -}}
 
-{{- range $key, $value := .Params.ingredients  -}}
+{{ $sAllergenes := newScratch }}
+{{- range $.Site.Data.ingredients -}}
+  {{- range .ingredients -}}
+    {{- if .alergenesIng -}}
+      {{- $ingTitle := .title -}}
+      {{ range .alergenesIng -}}
+           {{$sAllergenes.Add . (slice $ingTitle)}}
+      {{ end }}    
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{ $allergenesDict := dict }}
+{{ $allergenesList := slice }}
+{{ range $allergenesTypeList }}
+  {{ $allergenesDict = merge $allergenesDict (dict . ($sAllergenes.Get .)) }}
+  {{ $allergenesList = append  ($sAllergenes.Get .) $allergenesList }}
+{{ end }}
+
+{{ $allergenesLgList := slice "Poisson" "Oeuf" "Soja" "Sésame" "Moutarde" "Fruit à coque" "Céleri" "Crustacé" "Arachide" "Mollusque"}}
+
+{{/* reccupération des ingredients warning de la recette  */}}
+{{ $ingredientsL := slice }}
+
+{{- range $key, $value := .Params.ingredients -}}
 {{- with . -}}
-  {{- range $index, $element := . -}}
-    {{ $ingredients = $ingredients | append .title}}
-  {{- end }}
-{{- end -}} {{/* with */}} 
+{{- range $index, $element := . -}}
+{{ $ingredientsL = $ingredientsL | append .title}}
+{{- end }}
 {{- end -}} 
+{{- end -}}
 
-{{- $alergeneRecette := intersect $alergene $ingredients  -}}
-{{- $glutenRecette := intersect $gluten $ingredients  -}}
-{{- $lactoseRecette := intersect $lactose $ingredients  -}}
-{{- $noveganRecette := intersect $novegan $ingredients  -}}
-
-
-{{/*  */}}
+{{- $alertGluten := intersect $ingredientsL ($sAllergenes.Get "Gluten") -}}
+{{- $alertPorc := intersect $ingredientsL ($sAllergenes.Get "Porc") -}}
+{{- $alertLait := intersect $ingredientsL ($sAllergenes.Get "Produit laitier") -}}
+{{- $alertAutresAllergenes := slice -}}
+{{ range $allergenesLgList }}
+  {{- $toAdd := intersect $ingredientsL ($sAllergenes.Get . ) -}}
+  {{- $alertAutresAllergenes = $alertAutresAllergenes | append  $toAdd -}}
+{{ end }}
 
 
 <h1>{{.Title}}</h1>
@@ -112,37 +121,37 @@
             </div>
           {{- end -}}
         </div>
-     
-        {{- with (or ( $alergeneRecette ) ( $glutenRecette) ( $lactoseRecette) ( $noveganRecette)) -}}
-        <div class="col-12 col-md-6 col-lg-6 col-xl-6">
-          <div class="card border-danger shadow">
-            <div class="card-body small">
-          {{- with $alergeneRecette -}}
-          <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "fs" 4) }} Ingrédients alergenes :
-            {{ delimit $alergeneRecette ", "}}
-          </div>
-          {{- end -}}
-          {{- with $glutenRecette -}}
-          <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "fs" 4) }} 
-            Ingrédients contenant du gluten :
-            {{ delimit $glutenRecette ", "}}
-          </div>
-          {{- end -}}
-          {{- with $lactoseRecette -}}
-          <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "fs" 4) }}
-            Ingrédients contenant du lactose :
-            {{ delimit $lactoseRecette ", "}}
-          </div>
-          {{- end -}}
-          {{- with $noveganRecette -}}
-          <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "fs" 4) }}            Ingrédients non-vegan :
-            {{ delimit $noveganRecette ", "}}
-          </div>
-          {{- end -}}
-        </div>
+        {{- with (or ( $alertAutresAllergenes ) ( $alertGluten) ( $alertLait) ( $alertPorc)) -}}
+        <div class="col-12 col-md-6 col-lg-6 col-xl-6 print-col-2">
+          <div class="card border-danger shadow small px-4 card-body print-nocard">
+            {{- with $alertAutresAllergenes -}}
+            <div> {{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "fs" 3) }}
+              Allergènes divers:
+              <span class="fw-bold">{{ delimit $alertAutresAllergenes ", "}}</span>
+            </div>
+            {{- end -}}
+            {{- with $alertGluten -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/gluten" "display" "inline" "fs" 3) }}
+              Gluten :
+              <span class="fw-bold">{{ delimit $alertGluten ", "}}</span>
+            </div>
+            {{- end -}}
+            {{- with $alertLait -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/milk-box" "display" "inline" "fs" 3) }}
+              Produits laitier :
+              <span class="fw-bold">{{ delimit $alertLait ", "}}</span>
+            </div>
+            {{- end -}}
+            {{- with $alertPorc -}}
+            <div>{{ partial "inline-svg" (dict "src" "fonticons/no-vegan" "display" "inline" "fs" 3) }} Porc:
+              <span class="fw-bold">{{ delimit $alertPorc ", "}}</span>
+            </div>
+            {{- end -}}
           </div>
         </div>
-        {{- end -}}
+        {{- end -}} 
+
+       
       </div>
     <hr class="mt-2 no-print">
 
@@ -154,17 +163,16 @@
     <h4>Ingredients </h4>
 
       {{/*  <div class="card my-4 p-2 shadow">
-        <span class="small">{{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "rem" 1) }} → Alergènes </span>
+        <span class="small">{{ partial "inline-svg" (dict "src" "fonticons/exclamation-triangle" "display" "inline" "rem" 1) }} → Allergènes </span>
       </div>  */}}
 
       {{- range $key, $value := .Params.ingredients  -}}
         {{- with . -}}
         <div class="card my-2 p-2 " outlined>
               <span class="fw-bold mb-1">{{ $key | strings.FirstUpper }} </span>
-              
               {{- range $index, $element := . -}} 
                 <div class="small ps-2">
-               {{ partial "components/ingredients" (dict "title" .title "quantite" .quantite "unit" .unit "alergene" $alergene  ) }}
+               {{ partial "components/ingredients" (dict "title" .title "quantite" .quantite "unit" .unit "alergene" $allergenesList  ) }}
               </div>
               {{end}}
         </div>
@@ -202,6 +210,51 @@
     </div>
     {{- end -}}
     {{- end -}}
+
+
+  {{/*  Réccupération des backlink : recettes citant celle-ci comme recette alternative  */}}
+  {{ $backlinks := dict }}
+  {{ $page := . }}
+  {{/*  tableau des recettes alternatives signalées pour eviter les doublons avec les backlinks  */}}
+  {{ $recetteAlt := slice}}
+  {{ range where .Site.RegularPages "Section" "recettes" }}
+  {{ $url := .RelPermalink }}
+  {{ $title := .Title }}
+  {{ range .Params.prepAlt }} 
+    {{ if eq .recetteAlt $page.Title }}
+      {{ $backlinks = merge $backlinks (dict $url $title ) }}
+    {{ end }}
+  {{ end }}
+  {{ end }}
+{{ $backlinks }}
+
+    {{- if  (or .Params.prepAlt $backlinks) -}}
+    <div class="card my-2  bg-light no-print">
+      <div class="card-body small">
+        <div class="card-title fw-bold">Préparation(s) alternative(s): </div>
+      {{- range .Params.prepAlt -}}
+      {{ $recetteAlt = $recetteAlt | append .recetteAlt }}
+        <div>
+          {{ with site.GetPage ( .recetteAlt | urlize) }} 
+          <a id="toBacklink{{.RelPermalink}}"href="{{ .Permalink}}">{{.Title}}</a>
+         {{end}}
+        </div>
+      {{- end -}}
+      {{- end -}}
+
+      {{ with $backlinks }}
+      <div>
+        {{ range $url, $title := $backlinks }}
+          {{ if not (in $recetteAlt $title) }}
+          <span><a href="{{ $url }}">{{ $title}}</a></span>
+          {{ end }}
+        {{ end }}
+      </div>
+      {{ end }}
+
+      </div>
+    </div>
+
 
   </div>
   </div>
