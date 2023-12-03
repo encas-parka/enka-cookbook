@@ -603,7 +603,6 @@
                       {{end}}
 
                     {{ else if  or (eq .unit "grammes") (eq .unit "ml")}}
-                      {{/* BUG : les quantité ne s'affiche plus du tout a certain endroit (partout ou grammes et ml ?)    */}}
                       {{ if gt (math.Ceil $quantiteRepas) 999}}
                         {{ div $quantiteRepas 1000  | lang.FormatNumber 2 | strings.TrimRight "0" | strings.TrimRight ","}}
                         {{ if eq .unit "ml"}}
@@ -611,7 +610,7 @@
                         {{ else if eq .unit "grammes"}}
                           {{ printf "Kg"}}
                         {{ end }} 
-                         
+
                       {{ else if lt $quantiteRepas 1}}
                         {{ $quantiteRepas | lang.FormatNumber 2 | strings.TrimRight "0" | strings.TrimRight ","}} {{$unit}}
                       {{ else }}
@@ -693,10 +692,10 @@
   <div class="row justify-content-evenly">
 
     {{/*  ::: _Sidebar Total ingredients  */}}
-    <nav class="col-md-4 col-lg-3 d-md-block bg-light sidebar mt-7 d-print-none">
-      <div class="sticky-top" style="top: 10%">
+    <nav class="flex-column col-md-4 col-lg-3 d-md-block bg-light  mt-7 d-print-none " >
+      <div class="sticky-top " style="top: 10%">
     
-        <div class="my-5">
+        <div class="my-5 small">
          <div class="mb-3">
             <label class="mb-2">Selectionner la période  que vous souhaitez prendre en compte</label>
             <div class="mb-3">
@@ -723,15 +722,15 @@
             </div>
             <div class="mb-1 form-check form-switch">
               <input type="checkbox" class="form-check-input" v-model="legumesByRanges" name="cb-legumesByRanges" id="cb-legumesByRanges">
-              <label for="cb-legumesByRanges">... pour les fruits et legumes frais </label>
+              <label for="cb-legumesByRanges">... fruits et legumes frais </label>
             </div>
             <div class="mb-1 form-check form-switch">
               <input type="checkbox" class="form-check-input" v-model="fraisByRanges" name="cb-fraisByRanges" id="cb-fraisByRanges">
-              <label for="cb-fraisByRanges">... pour les autres produit frais (laitiers...)</label>
+              <label for="cb-fraisByRanges">... autres produit frais</label>
             </div>
             <div class="mb-1 form-check form-switch">
               <input type="checkbox" class="form-check-input" v-model="animauxByRanges" name="cb-animauxByRanges" id="cb-animauxByRanges">
-              <label for="cb-animauxByRanges">... pour les viandes et poissons </label>
+              <label for="cb-animauxByRanges">... viandes et poissons </label>
             </div>
 
             <hr>
@@ -743,7 +742,6 @@
               <input type="text" v-model="search" class="form-control" placeholder="Rechercher un ingrédient">
             </div>
           </div>
-
         </div>
   
       </nav>
@@ -761,12 +759,11 @@
 
       {{/*  :::___table Frais sans detail  */}}
         <div 
-        v-show="{{.thisRange}}"
-       
+        v-if="totalQantiteSimple('{{ .iType }}', range[0], range[range.length -1] ).length > 0  && {{.thisRange}}"
         class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
         :class="{'no-print':!toPrint.LegumesRanges }"
         :id="range[0]"
-        >  {{/*  computeTotalQIFiltered('{{.iType}}', range[0], range[range.length -1] ).length > 0 &&   */}}
+        > 
         <div class="card-body">
           <div class="no-print">
             <span class="fs-5"> {{.titleR}} du [[ range[0] ]] au [[range[range.length - 1] ]] </span>
@@ -790,11 +787,11 @@
               </tr>
             </thead>
             <tbody>
-              {{/*  TODO : Optimisation : la fonction computeTotalQIFiltered() est appelé en boucle pour CHAQUE tableau.   */}}
-              <template v-for="(totals, ingredient) in computeTotalQIFilteredND('{{ .iType }}', range[0], range[range.length -1])">
+             
+              <template v-for="(totals, ingredient) in totalQantiteSimple('{{ .iType }}', range[0], range[range.length -1])">
                 <tr>
                 <td>[[ingredient]]</td>
-                <td class="text-end print-td-mw-15">
+                <td class="text-end pricompnt-td-mw-15">
                   <template v-for="(quantite, index) in totals" >
                     <span v-if="quantite.unitTotal !== ''">[[Math.round(quantite.qTotal * 100 ) / 100]] [[quantite.unitTotal]]</span>
                     <span v-else class="small">... [[quantite.qTotal]] plats ([[quantite.totalAssiettes]] couverts)</span>
@@ -813,9 +810,9 @@
 
 
     {{/*  ::: ___table Frais Détaillé  */}}
-    {{/*  BUG : totalsAndDetailIngredientsFiltered() semble sensible au datepicker   */}}
+    {{/*  BUG : totalQuantiteWithDetail() semble sensible au datepicker   */}}
       <div 
-        v-show="computeTotalQIFiltered('{{.iType}}', range[0], range[range.length -1] ).length > 0 && showAllColIngredients && {{.thisRange}}"
+        v-if=" showAllColIngredients && {{.thisRange}}"
         class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
         :class="{'no-print':!toPrint.LegumesRanges }"
         :id="range[0]"
@@ -844,7 +841,7 @@
             </thead>
 
             <tbody>
-              <tr v-for="item in totalsAndDetailIngredientsFiltered('{{ .iType }}', range[0], range[range.length - 1])"
+              <tr v-for="item in  totalQuantiteWithDetail('{{ .iType }}','detail', range[0], range[range.length - 1])"
                 :class="{'table-secondary fw-bold': item.qTotal}"
                 >
                 <td :class="{'small text-muted': !item.qTotal}">[[item.ingredient]]</td>
@@ -865,6 +862,7 @@
           </table>
           </div>
           </div>
+          
         </template>
       </div>
     {{ end }}
@@ -873,15 +871,15 @@
     {{/*  Renommage des iType  */}}
     {{ range sort $IngredientsTypesList "iType" "desc"}}
       {{ $iTypeName := .iType }}
-    {{ if eq .iType "Lof" }}
-      {{ $iTypeName = "LOF (Lait Oeuf Farine Huile)" }}
-    {{ else if  eq .iType "Animaux"}}
-      {{ $iTypeName = "Viandes et Poissons" }}
-    {{ end }}
+      {{ if eq .iType "Lof" }}
+        {{ $iTypeName = "LOF (Lait Oeuf Farine Huile)" }}
+      {{ else if  eq .iType "Animaux"}}
+        {{ $iTypeName = "Viandes et Poissons" }}
+      {{ end }}
 
     {{/*  ::: _ Card des tableau ingredients petit et grand  */}}
     <div 
-      v-show="this.computeTotalQIFiltered('{{.iType}}').length > 0"
+      v-if="filteredIngredients('{{ .iType }}').length > 0 "
       class="card my-2 mb-lg-6 avoid-break-inside  mb-3 print-nocard"
       :class="{'no-print':!toPrint.{{.iType}} }"
       id="{{.iType}}"
@@ -917,7 +915,8 @@
           </thead>
 
           <tbody>
-            <tr v-for="item in totalsAndDetailIngredientsFiltered('{{ .iType }}', 'ingredients')"
+            {{/*  TEST : ITD  */}}
+            <tr v-for="item in totalQuantiteWithDetail('{{ .iType }}', 'detail')"
               :class="{'table-secondary fw-bold': item.qTotal}"
               >
               <td :class="{'small text-muted': !item.qTotal}">[[item.ingredient]]</td>
@@ -950,7 +949,7 @@
           </thead>
           <tbody>
             {{/*  Itération sur tous les ingredients filtrés par type  */}}
-            <template v-for="(totals, ingredient) in computeTotalQIFilteredND('{{ .iType }}')">
+            <template v-for="(totals, ingredient) in totalQantiteSimple('{{ .iType }}')">
               <tr>
               <td>[[ingredient]]</td>
               <td class="text-end print-td-mw-15">
@@ -967,33 +966,7 @@
           </tbody>
         </table>
      
-        {{/*  TEST table bak  */}}
-      {{/*  <table class="table table-bordered-bottom table-responsive table-striped print-border-1 "   v-if="!showAllColIngredients">
-          <thead>
-            <tr>
-              <th>Ingredients {{$iTypeName}}</th>
-              <th class="text-end">Total</th>
-              <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
-              <th class="printonly" v-show="printAddCol === '2' "></th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="(item, index) in computeTotalQIFiltered('{{ .iType }}')">
-              <tr>
-              <td>[[item.ingredient]]</td>
-              
-              <td class="text-end print-td-mw-15">
-                  
-                <span v-if="item.total.lenght === 0" class="small">? : [[item.total]] recettes</span>
-                <span v-else>[[item.total]] [[item.unitTotal]]</span>
-              
-              </td>
-              <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15"></td>
-              <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
-  
-            </tr>
-          </tbody>
-        </table>  */}}
+
       </div>
     </div>
 
@@ -1175,12 +1148,7 @@ computed: {
   },
 
 
-  {{/*  computeTotalQIFrais3Days: function (){
-    const totalsIngredientFiltered = computeTotalQIFiltered(Frais)
-  },  */}}
-
-
-  
+   
   
 
 
@@ -1195,12 +1163,12 @@ watch: {
     this.endDateSelectedDebug = new Date(lastDateSelected.setDate(lastDateSelected.getDate() + 1 )).toISOString().substr(0, 10);
   }, 
 
-  {{/*  daysPerRange: 'splitDateRanges',  */}}
-}, // watch() end
+  
+}, 
+{{/*  watch end  */}}
 
 {{/*  ::: methods  */}}
 methods: { 
-
 
   {{/*  ::: __print  */}}
   printThis(el, section) {
@@ -1226,7 +1194,6 @@ methods: {
     });
   },
 
-
   print() {
       setTimeout(() => {
         window.print();
@@ -1236,7 +1203,6 @@ methods: {
   {{/*  USELESS . C'est quoi ? Pas de reference  */}}
   updateSelectedAttribute (e) {
     let sel, i;
-
     sel = document.getElementById(e.target.id);
           // remove 'selected' from prior user selection
     for (i = 0; i < sel.length; i += 1) {
@@ -1255,7 +1221,6 @@ methods: {
   },
 
   datePickerReset() {
- 
     const configDPStart = {
       enableTime: false,
       dateFormat: "Y-m-d",
@@ -1277,7 +1242,6 @@ methods: {
  
     flatpickr(datepickerStart, configDPStart);
     flatpickr(datepickerEnd, configDPEnd);   
-   
   },
 
   DateAddDays(dateDebug) {
@@ -1306,18 +1270,17 @@ methods: {
     return ingredient.quantite;
   },
 
+  {{/*  USELESS  */}}
   convertToKg: function (quantite, unit) {
     return quantite / 1000;
   },
 
   {{/*  ::: __date split range   */}}
-
   changeDateRanges(){
     this.splitDateRanges(this.daysPerRange)
   },
 
   splitDateRanges(newDaysPerRange) {
-    
     let currentRange = [];
     this.rangesDates = [];
     // split dates
@@ -1345,7 +1308,8 @@ methods: {
     // Récupérer la liste des ingrédients
     let ingredients = this.ingredients
 
-     // Si pas de valeurs definies, alors les dates sont celles du datepicker
+    // Si pas de valeurs definies, alors les dates sont celles du datepicker
+
     var start = start ?? this.startDateSelected ;
     var end = end ?? this.endDateSelectedDebug;
   
@@ -1357,75 +1321,70 @@ methods: {
         i.dateService <=end &&
         i.ingredient.toLowerCase().includes(this.search.toLowerCase())
     );
+    {{/*  console.log("filterCalled")  */}}
     return filtered
   },
 
 
  {{/*  Totals des ingredients filtré ...  */}}
-  computeTotalQIFiltered(iType, start, end) {
+
+
+  {{/*  BAKtotalQuantite(iType, start, end) {
     
     // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. 
     const debugDate = end !== undefined ? this.DateAddDays(end) : undefined;
     const endDebug  = debugDate !== undefined ? debugDate.toISOString().slice(0, 10) : undefined;
 
-    return this.computeTotalQI(this.filteredIngredients(iType, start, endDebug));
-  },
+    const result = this.computeTotalQI(this.filteredIngredients(iType, start, endDebug));
+    console.log("totalQuantite/computeTotalQI: ", result);
+    return result
+  },  */}}
 
-  computeTotalQIFilteredND(iType, start, end) {
+  totalQantiteSimple(iType, start, end) {
     // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. 
+
+        const debugDate = end !== undefined ? this.DateAddDays(end) : undefined;
+        const endDebug  = debugDate !== undefined ? debugDate.toISOString().slice(0, 10) : undefined;
+
+    const result = this.computeTotalQuantite(this.filteredIngredients(iType, start, end));
+    {{/*  console.log("totalQantiteSimple ", result);  */}}
+    return result
+  },
+  
+  totalQuantiteWithDetail(iType, allo, start, end) {
+    // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. Si non definie, c'est filteredIng qui utilisera le datepicker et corrigera la date de fin.
     const debugDate = end !== undefined ? this.DateAddDays(end) : undefined;
     const endDebug  = debugDate !== undefined ? debugDate.toISOString().slice(0, 10) : undefined;
-    
-    return this.computeTotalQuantite(this.filteredIngredients(iType, start, endDebug));
-  },
 
-  totalsAndDetailIngredientsFiltered(iType, start, end) {
-    const total = this.computeTotalQI(this.filteredIngredients(iType));
-    const element = this.filteredIngredients(iType);
+    const totalArray = this.totalQuantite(iType, allo, start, endDebug);
+    const ingDetailList = this.filteredIngredients(iType, start, endDebug);
+    console.log("ingDetail: ", ingDetailList)
+    const result = new Set([...ingDetailList, ...totalArray].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
 
-    const result = new Set([...element, ...total].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
-
+    {{/*  console.log("totalsAndDetail: " , iType, start, endDebug , "allo:" ,allo,  result);  */}}
     return result;
   },
 
-  computeTotalQI(filteredIng) {
-  const totals = {};
+  
+  
+  totalQuantite(iType, allo, start, end) {
 
-  filteredIng.forEach((item) => {
-    {{/*  TODO : optimisation  */}}
-    if (item.unit === 'grammes') {
-      item.quantite = item.quantite / 1000 ;
-      item.unit = 'Kg';
-    }
-    if (item.unit === 'ml') {
-      item.quantite = item.quantite / 1000 ;
-      item.unit = 'litre';
-    }
-    const { ingredient, quantite, unit } = item;
-    const key = `${ingredient}_${unit}`;
-  
-    if (!totals[key]) {
-      totals[key] = {
-          ingredient,
-        unitTotal: unit,
-        qTotal: quantite !== 0 ? quantite : 1
-      };
-      } else {
-        totals[key].qTotal += quantite !== 0 ? quantite : 1;
-    }
-  });
-  
-    return Object.entries(totals).map(([key, { ingredient, unitTotal, qTotal, ...item }]) => {
-      const [ingredientKey, unitKey] = key.split('_');
+    const total  = this.computeTotalQuantite(this.filteredIngredients(iType, start, end));
+    
+    const result = Object.entries(total).flatMap(([ingredient, values]) => {
+    return values.map(({ unitTotal, qTotal }) => {
       return {
         ingredient,
         unitTotal,
-        qTotal: Math.round(qTotal * 100) / 100,
-        ...item
-      };
-    }).sort((a, b) => a.ingredient.localeCompare(b.ingredient));
-  
+        qTotal
+        };
+      });
+    });
+    console.log(allo, result);
+    return result;
+    
   },
+
 
   computeTotalQuantite(filteredIng) {
     const finalTotals = {};
@@ -1466,7 +1425,9 @@ methods: {
     Object.keys(finalTotals).forEach((ingredient) => {
       result[ingredient] = finalTotals[ingredient].sort((a, b) => a.unitTotal.localeCompare(b.unitTotal));
     });
-  
+
+
+    {{/*  console.log("computeTotalQuantite : ", result)  */}}
     return result;
   },
 
