@@ -756,7 +756,7 @@
 
       {{/*  :::___table Frais sans detail  */}}
         <div 
-        v-if="totalQantiteSimple('{{ .iType }}', range[0], range[range.length -1] ).length > 0  && {{.thisRange}}"
+        v-if="filteredIngredients('{{ .iType }}', range[0], range[range.length -1], 'allo:frais' ).length > 0 && {{.thisRange}}"
         class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
         :class="{'no-print':!toPrint.LegumesRanges }"
         :id="range[0]"
@@ -785,7 +785,7 @@
             </thead>
             <tbody>
              
-              <template v-for="(totals, ingredient) in totalQantiteSimple('{{ .iType }}', range[0], range[range.length -1])">
+              <template v-for="(totals, ingredient) in totalQantiteInlineTx('{{ .iType }}', range[0], range[range.length -1])">
                 <tr>
                 <td>[[ingredient]]</td>
                 <td class="text-end pricompnt-td-mw-15">
@@ -809,7 +809,7 @@
     {{/*  ::: ___table Frais Détaillé  */}}
     {{/*  BUG : totalQuantiteWithDetail() semble sensible au datepicker   */}}
       <div 
-        v-if=" showAllColIngredients && {{.thisRange}}"
+        v-if="showAllColIngredients && {{.thisRange}} && totalQuantite('{{ .iType }}', range[0], range[range.length - 1]).length > 0"
         class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
         :class="{'no-print':!toPrint.LegumesRanges }"
         :id="range[0]"
@@ -838,7 +838,7 @@
             </thead>
 
             <tbody>
-              <tr v-for="item in  totalQuantiteWithDetail('{{ .iType }}','detail', range[0], range[range.length - 1])"
+              <tr v-for="item in totalQuantiteWithDetail('{{ .iType }}', range[0], range[range.length - 1])"
                 :class="{'table-secondary fw-bold': item.qTotal}"
                 >
                 <td :class="{'small text-muted': !item.qTotal}">[[item.ingredient]]</td>
@@ -876,7 +876,7 @@
 
     {{/*  ::: _ Card des tableau ingredients petit et grand  */}}
     <div 
-      v-if="filteredIngredients('{{ .iType }}').length > 0 "
+      v-if="filteredIngredients('{{ .iType }}', startDateSelected, endDateSelected).length > 0 "
       class="card my-2 mb-lg-6 avoid-break-inside  mb-3 print-nocard"
       :class="{'no-print':!toPrint.{{.iType}} }"
       id="{{.iType}}"
@@ -913,7 +913,7 @@
 
           <tbody>
             {{/*  TEST : ITD  */}}
-            <tr v-for="item in totalQuantiteWithDetail('{{ .iType }}', 'detail')"
+            <tr v-for="item in totalQuantiteWithDetail('{{ .iType }}', startDateSelected, endDateSelected)"
               :class="{'table-secondary fw-bold': item.qTotal}"
               >
               <td :class="{'small text-muted': !item.qTotal}">[[item.ingredient]]</td>
@@ -946,7 +946,7 @@
           </thead>
           <tbody>
             {{/*  Itération sur tous les ingredients filtrés par type  */}}
-            <template v-for="(totals, ingredient) in totalQantiteSimple('{{ .iType }}')">
+            <template v-for="(totals, ingredient) in totalQantiteInlineTx('{{ .iType }}', startDateSelected, endDateSelected)">
               <tr>
               <td>[[ingredient]]</td>
               <td class="text-end print-td-mw-15">
@@ -1153,6 +1153,8 @@ computed: {
 
 {{/*  ::: watch  */}}
 watch: {
+
+  {{/*  USELESS → directement dans filteredIngredients avec DateAddDays  */}}
   endDateSelected: function () {
     /* Ajoute un jour a la endDateSelected, pour que les derniers jours soit bien pris en compte par le filtre opéré dans totalsIngredientFiltered. 
     Meme fonction dans mounted() pour l'initialisation ! Doit etre dans watch() sinon les changement de endDateSelected ne sont pas pris en compte... */ 
@@ -1301,14 +1303,13 @@ methods: {
   {{/* ::: __calculs des totaux des ingredients  */}}
 
   {{/*  tableaux des ingredients filtrés en fonction des dates séléctionné et types  */}}
-  filteredIngredients: function (iType, start, end) {
+  filteredIngredients: function (iType, start, end, allo) {
     // Récupérer la liste des ingrédients
     let ingredients = this.ingredients
 
-    // Si pas de valeurs definies, alors les dates sont celles du datepicker
+    // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. 
+    end  = this.DateAddDays(end).toISOString().slice(0, 10);
 
-    var start = start ?? this.startDateSelected ;
-    var end = end ?? this.endDateSelectedDebug;
   
     // Filtrer les ingrédients selon les critères spécifiés
     const filtered = ingredients.filter(
@@ -1326,46 +1327,28 @@ methods: {
  {{/*  Totals des ingredients filtré ...  */}}
 
 
-  {{/*  BAKtotalQuantite(iType, start, end) {
-    
-    // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. 
-    const debugDate = end !== undefined ? this.DateAddDays(end) : undefined;
-    const endDebug  = debugDate !== undefined ? debugDate.toISOString().slice(0, 10) : undefined;
-
-    const result = this.computeTotalQI(this.filteredIngredients(iType, start, endDebug));
-    console.log("totalQuantite/computeTotalQI: ", result);
-    return result
-  },  */}}
-
-  totalQantiteSimple(iType, start, end) {
-    // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. 
-
-        const debugDate = end !== undefined ? this.DateAddDays(end) : undefined;
-        const endDebug  = debugDate !== undefined ? debugDate.toISOString().slice(0, 10) : undefined;
+  totalQantiteInlineTx(iType, start, end, allo) {
+    // renvoie un tableau sous la forme : { Ail: (2) […], Echalote: (1) […], Tomate: (1) […], "Citron jaune": (1) […] }. Permet l'affichage en une ligne des ingrédients ayant plusieurs unités non additionnables. 
 
     const result = this.computeTotalQuantite(this.filteredIngredients(iType, start, end));
-    {{/*  console.log("totalQantiteSimple ", result);  */}}
+    console.log("totalQantiteInlineTx ", allo, result);
     return result
   },
   
-  totalQuantiteWithDetail(iType, allo, start, end) {
-    // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. Si non definie, c'est filteredIng qui utilisera le datepicker et corrigera la date de fin.
-    const debugDate = end !== undefined ? this.DateAddDays(end) : undefined;
-    const endDebug  = debugDate !== undefined ? debugDate.toISOString().slice(0, 10) : undefined;
+  totalQuantiteWithDetail(iType, start, end) {
 
-    const totalArray = this.totalQuantite(iType, allo, start, endDebug);
-    const ingDetailList = this.filteredIngredients(iType, start, endDebug);
+    const totalArray = this.totalQuantite(iType, start, end);
+    const ingDetailList = this.filteredIngredients(iType, start, end);
     console.log("ingDetail: ", ingDetailList)
+    
     const result = new Set([...ingDetailList, ...totalArray].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
 
-    {{/*  console.log("totalsAndDetail: " , iType, start, endDebug , "allo:" ,allo,  result);  */}}
+    console.log("totalsAndDetail: " , iType, start, end ,   result);
     return result;
   },
 
-  
-  
-  totalQuantite(iType, allo, start, end) {
-
+  totalQuantite(iType, start, end) {
+    // renvoie un tableau d'objets {ingredient, unitTotal, qTotal}
     const total  = this.computeTotalQuantite(this.filteredIngredients(iType, start, end));
     
     const result = Object.entries(total).flatMap(([ingredient, values]) => {
@@ -1377,9 +1360,8 @@ methods: {
         };
       });
     });
-    console.log(allo, result);
+    console.log("tQ: ", result);
     return result;
-    
   },
 
 
