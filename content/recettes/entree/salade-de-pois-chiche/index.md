@@ -39,7 +39,7 @@ ingredients:
       commentaire: Pois-chiche secs
   epices:
     - title: Cumin
-      quantite: ""
+     
     - title: Coriandre
       quantite: 2
       unit: bottes

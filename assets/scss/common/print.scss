@@ -20,6 +20,10 @@
     max-width: 100% !important;
   }
 
+  .print-col-2 {
+    max-width: 50% !important;
+  }
+
   .print-col-70-100 {
     max-width: 70%;
     padding: 0 0 0 5px
@@ -123,6 +127,10 @@
 
   // }
 
+  table {
+    page-break-inside: avoid;
+    overflow: auto;
+  }
 
 
 

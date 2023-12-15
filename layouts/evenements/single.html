@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="{{ "flatpickr/flatpickr.css" | relURL }}">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"> 
 
-<iframe id="print-iframe" width="0" height="0"></iframe> {{/* USELESS  ? git-comment ? */}}
+<iframe id="print-iframe" width="0" height="0"></iframe> {{/* XXX  ? git-comment ? */}}
 
 <!--::: Liste qui contiendra tous les ingrédients avec leurs données associés (quantité, recette, date, assietes...). Sert aux tableaux des quantités.  -->
 {{- $IngredientList := slice -}}
@@ -17,13 +17,14 @@
 {{- $IngredientsTypesList := slice -}}
 {{- $recettesAll :=  dict -}}
 {{$recetteKey:= 1}}
+{{ $nbDate := 0 }}
 
 {{/*  Reccuperation des ingredients frais  */}}
 {{ $pFrais := slice }}
 {{- range $.Site.Data.ingredients -}}
   {{- range .ingredients -}}
     {{- if .pFrais -}}
-      {{$pFrais =  $pFrais | append .title}}
+      {{- $pFrais =  $pFrais | append .title -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
@@ -31,16 +32,17 @@
 {{- range $.Param "repas" -}}
   <!-- Creation des variables qui ne seront plus visible au prochain scope. Nous sommes dans les params de l'Evenement -->
   {{- $dateService:=.date_service -}}
+  {{- $nbDate = add $nbDate 1 -}}
   {{- $horaire:=.horaire -}}
   
   {{/*  Modifier l'heure de la date ISO en fonction du parametre $horaire (non défini par l'utilisateur) afin de permettre le tri par date des recettes.  */}}
     {{ if eq $horaire "matin" }}
-      {{ $dateService = $dateService | replaceRE "T\\d{2}:\\d{2}:\\d{2}" "T08:00:00" }}
-    {{ else if eq $horaire "midi" }}
-      {{ $dateService = $dateService | replaceRE "T\\d{2}:\\d{2}:\\d{2}" "T12:00:00" }}
-    {{ else if eq $horaire "soir" }}
-      {{ $dateService = $dateService | replaceRE "T\\d{2}:\\d{2}:\\d{2}" "T20:00:00" }}
-    {{ end }}
+      {{- $dateService = $dateService | replaceRE "T\\d{2}:\\d{2}:\\d{2}" "T08:00:00" }}
+    {{- else if eq $horaire "midi" -}}
+      {{- $dateService = $dateService | replaceRE "T\\d{2}:\\d{2}:\\d{2}" "T12:00:00" -}}
+    {{- else if eq $horaire "soir" -}}
+      {{- $dateService = $dateService | replaceRE "T\\d{2}:\\d{2}:\\d{2}" "T20:00:00" -}}
+    {{- end -}}
     
     {{- $assiettes:= (int .assiettes)  -}}
 
@@ -55,18 +57,18 @@
       {{- $assiettes = .altAssiettes  -}}
     {{ end }}
     
-    <!-- Envoie de la liste des recettes dans recettesList-->
-            {{- $recettesList = $recettesList | append (dict
-            "recetteKey" $recetteKey
-            "recette" .recette
-            "dateService" $dateService
-            "horaire" $horaire
-            "typePlat" $typePlat
-            "assiettes" $assiettes
-            "chef" .chef
-            "commentaire" .commentaire
-            "partof" .partof
-            ) -}}
+    {{/*  Envoie de la liste des recettes dans recettesList  */}}
+    {{- $recettesList = $recettesList | append (dict
+        "recetteKey" $recetteKey
+        "recette" .recette
+        "dateService" $dateService
+        "horaire" $horaire
+        "typePlat" $typePlat
+        "assiettes" $assiettes
+        "chef" .chef
+        "commentaire" .commentaire
+        "partof" .partof
+    ) -}}
     {{/*  incrémentation des "id" unique des recettes  */}}
     {{$recetteKey = (add (float $recetteKey) 1)}}
 
@@ -107,12 +109,14 @@
           "assiettes" $assiettes
           ) -}}
 
-          {{ if and  (eq $key "lof") (in $pFrais .title) }}
+          {{/* XXX What ? rm for test  */}}
+          {{/*  {{ if and  (eq $key "lof") (in $pFrais .title) }}
             {{ $iType = "Frais"  }}
             {{- $IngredientsTypesList = $IngredientsTypesList | append (dict  "iType" $iType)  -}}
           {{ else }}
            {{- $IngredientsTypesList = $IngredientsTypesList | append (dict  "iType" ($key | strings.FirstUpper ))  -}}
-          {{ end }}
+          {{ end }}  */}}
+          {{- $IngredientsTypesList = $IngredientsTypesList | append (dict  "iType" $iType ) -}}
 
         {{- end -}}
       {{- end -}}
@@ -618,12 +622,7 @@
                       {{end}}
                     
                     {{ else }}
-                      {{ if gt $quantiteRepas 0.49 }}
-                        {{ math.Round $quantiteRepas }} {{$unit}}
-                       
-                      {{ else }}
-                        {{ $quantiteRepas | lang.FormatNumber 2 }}  {{$unit}}
-                      {{ end }}
+                       {{ $quantiteRepas | lang.FormatNumber 2 }}  {{$unit}}
                     {{ end }}
                   {{ end }}
               </div>
@@ -716,7 +715,7 @@
               Afficher les quantités des produits frais par périodes 
             </div>
             <div class="input-group mb-3">
-              <input type="number" v-model="daysPerRange" class="form-control" min="1" max="9" @input="changeDateRanges"
+              <input type="number" v-model="daysPerRange" class="form-control" min="1" max="9" 
               >
               <span class="input-group-text" id="basic-addon2">jours</span>
             </div>
@@ -749,53 +748,70 @@
   {{/* ::: Total INGREDIENTS   */}}
   <div class="col  print-col-12 ms-3" >
 
-    {{/* :::  __FraisByDayRange  */}}
+
+    {{/* :::_FraisByDayRange  */}}
     {{ $fraisByRanges := slice | append  (dict "idR" "LegumesRanges" "titleR" "Fruits Legumes Frais" "iType" "Legumes" "thisRange" "legumesByRanges") (dict "idR" "AnimauxRanges" "titleR" "Viandes/Poissons Frais" "iType" "Animaux" "thisRange" "animauxByRanges") (dict "idR" "FraisRanges" "titleR" "Autres produits Frais" "iType" "Frais" "thisRange" "fraisByRanges") }}
 
     {{ range $fraisByRanges }}
-    
+    {{ $indexTable := 1 }}
     <div id="{{.idR}}" class="">
       <template v-for="(range, index) in rangesDates">
 
-      {{/*  :::___table Frais sans detail  */}}
-        <div 
-        v-if="filteredIngredients('{{ .iType }}', range[0], range[range.length -1], 'allo:frais' ).length > 0 && {{.thisRange}}"
+              {{/*  <div 
+        v-if="filteredIngredientsRange('{{ .iType }}', range[0], range[range.length -1], 'allo:frais' ).length > 0 && {{.thisRange}}"
         class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
-        :class="{'no-print':!toPrint.LegumesRanges }"
-        :id="range[0]"
-        > 
+        :class="{'no-print':!toPrint.{{.idR}} }"
+         >
+        
         <div class="card-body">
-          <div class="no-print">
+          <div class="">
             <span class="fs-5"> {{.titleR}} du [[ range[0] ]] au [[range[range.length - 1] ]] </span>
-            <div class="my-2 float-end">
+            <div class="my-2 float-end no-print">
               <a
                 class="btn btn-outline-secondary btn-sm text-muted "
                 role="button"
-                @click="printThis('range', 'ingredients')"
+                @click="printThis('{{.idR}}', 'ingredients')"
                 >{{ partial "inline-svg" (dict "src" "fonticons/printer"  "fs" 3) }}</a>
             </div>
           </div>
     
-          <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " > 
-            {{/*  v-show="!showAllColIngredients"  */}}
+          <table class="table table-bordered-bottom table-responsive print-border-1 " :class="{'table-striped': !showAllColIngredients, 'table-bordered' : showAllColIngredients}"> 
             <thead>
               <tr>
-                <th>{{.iType}}</th>
-                <th class="text-end">Total</th>
+                <th class="">{{.iType}}</th>
+                <th>...</th>
+                <th class="text-end ">Total</th>
                 <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
                 <th class="printonly" v-show="printAddCol === '2' "></th>
               </tr>
             </thead>
             <tbody>
              
-              <template v-for="(totals, ingredient) in totalQantiteInlineTx('{{ .iType }}', range[0], range[range.length -1])">
-                <tr>
-                <td>[[ingredient]]</td>
-                <td class="text-end pricompnt-td-mw-15">
-                  <template v-for="(quantite, index) in totals" >
-                    <span v-if="quantite.unitTotal !== ''">[[Math.round(quantite.qTotal * 100 ) / 100]] [[quantite.unitTotal]]</span>
-                    <span v-else class="small">... [[quantite.qTotal]] plats ([[quantite.totalAssiettes]] couverts)</span>
-                    <span v-if="index !== totals.length - 1"> + </span>
+              <template v-for="ingredientObj in totalQantiteInlineTx('{{ .iType }}', range[0], range[range.length -1])">
+
+                <template v-if="showAllColIngredients">
+                <tr v-for="item in ingredientObj.details">
+                <td class="small">[[item.ingredient]]</td>
+                <td class="small">
+                    <span>[[item.recette]]</span> le [[new Date (item.dateService).toISOString().substr(0, 10)]] /
+                      [[item.horaire]] <br> pour [[item.assiettes]] couverts
+                      <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span>
+                    </td>
+                    <td></td>
+                  </tr>
+                  </template>
+
+                <tr :class="{'table-secondary': showAllColIngredients}">
+                <td>[[ingredientObj.ingredient]]</td>
+                <td class="small">
+                    <span>[[ingredientObj.totalAssiettes]] </span>
+                    <span>couverts</span>
+                  </td>
+                  <td class="text-end pricompnt-td-mw-15">
+                    <template v-for="(total, index) in ingredientObj.total" >
+                    <span v-if="total.unitTotal !== ''">[[Math.round(total.qTotal * 100 ) / 100]] [[total.unitTotal]]</span>
+                    <span v-else class="small">... [[total.qTotal]] plats ([[ingredientObj.totalAssiettes]] couverts)</span>
+                    <span v-if="index !== ingredientObj.total.length - 1"> + </span>
                   </template>
                 </td>
                 <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15"></td>
@@ -805,31 +821,32 @@
             </tbody>
           </table>
         </div>
-      </div>
+      </div>  */}}
 
 
 
-    {{/*  ::: ___table Frais Détaillé  */}}
-    {{/*  BUG : totalQuantiteWithDetail() semble sensible au datepicker   */}}
-      <div 
-        v-if="showAllColIngredients && {{.thisRange}} && totalQuantite('{{ .iType }}', range[0], range[range.length - 1]).length > 0"
+    {{/*  ::: ___table Frais  */}}
+      
+    <div 
+        v-if="{{.thisRange}} && totalRangeWithDetail('{{ .iType }}', range[0], range[range.length - 1]).size > 0" 
         class="card my-2 mb-lg-6 avoid-break-inside border-danger border-1 mb-3  print-nocard"
-        :class="{'no-print':!toPrint.LegumesRanges }"
+        :class="{'no-print':!toPrint.{{.idR}} }"
         :id="range[0]"
         >
         <div class="card-body">
-          <div class="no-print">
+          <div class="">
             <span class="fs-5"> {{.titleR}} du [[ range[0] ]] au [[range[range.length - 1] ]] </span>
             <div class="my-2 float-end">
               <a
                 class="btn btn-outline-secondary btn-sm text-muted "
                 role="button"
-                @click="printThis('range', 'ingredients')"
+                @click="printThis('{{.idR}}', 'ingredients')"
                 >{{ partial "inline-svg" (dict "src" "fonticons/printer"  "fs" 3) }}</a>
             </div>
           </div>
 
-          <table id="tableFraisDetail" class="table table-bordered table-responsive">
+          <table id="tableFrais" class="table table-responsive"  :class="{'table-striped': !showAllColIngredients, 'table-bordered' : showAllColIngredients}">
+
             <thead>
               <tr>
                 <th>Ingredients {{.iType}} </th>
@@ -841,7 +858,9 @@
             </thead>
 
             <tbody>
-              <tr v-for="item in totalQuantiteWithDetail('{{ .iType }}', range[0], range[range.length - 1])"
+              <template v-for="item in totalRangeWithDetail('{{ .iType }}', range[0], range[range.length - 1])">
+
+                <tr v-if="showAllColIngredients && !item.qTotal"
                 :class="{'table-secondary fw-bold': item.qTotal}"
                 >
                 <td :class="{'small text-muted': !item.qTotal}">[[item.ingredient]]</td>
@@ -850,13 +869,20 @@
                   [[item.horaire]] <br> pour [[item.assiettes]] couverts
                   <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span>
                 </td>
-                <td v-else></td>
+                
+                </tr>
+
+                <tr v-if="item.qTotal" :class="{'table-secondary': showAllColIngredients}">
+                  <td>[[item.ingredient]]</td>
+                  <td class="small" >[[item.totalAssiettes]] couverts</td>
                 <td class="text-end">
                   <span>[[item.qTotal]] [[item.unitTotal]]</span>
                 </td>
                 <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15" ></td>
                 <td v-show=" printAddCol ===  '2' || printAddCol ===  '3' " class="printonly print-td-15" ></td>
               </tr>
+
+            </template>
 
             </tbody>
           </table>
@@ -871,6 +897,7 @@
     {{/*  Renommage des iType  */}}
     {{ range sort $IngredientsTypesList "iType" "desc"}}
       {{ $iTypeName := .iType }}
+      {{ $IngTypeList := (printf "Ing%sList" $iTypeName) }}
       {{ if eq .iType "Lof" }}
         {{ $iTypeName = "LOF (Lait Oeuf Farine Huile)" }}
       {{ else if  eq .iType "Animaux"}}
@@ -879,7 +906,7 @@
 
     {{/*  ::: _ Card des tableau ingredients petit et grand  */}}
     <div 
-      v-if="filteredIngredients('{{ .iType }}', startDateSelected, endDateSelected).length > 0 "
+      v-if="totalQuantitesDPS.{{$IngTypeList}} && Object.keys(totalQuantitesDPS.{{$IngTypeList}}).length > 0"
       class="card my-2 mb-lg-6 avoid-break-inside  mb-3 print-nocard"
       :class="{'no-print':!toPrint.{{.iType}} }"
       id="{{.iType}}"
@@ -902,8 +929,9 @@
         </div>
   
   
-        {{/* ::: __Table détaillé des ingrédients   */}}
-        <table class="table table-bordered table-responsive" v-if="showAllColIngredients">
+        {{/* ::: __Table ingrédients   */}}
+        <table class="table table-responsive"
+              :class="{'table-striped': !showAllColIngredients, 'table-bordered' : showAllColIngredients}">
           <thead>
             <tr>
               <th>Ingredients {{.iType}} </th>
@@ -915,57 +943,39 @@
           </thead>
 
           <tbody>
-            {{/*  TEST : ITD  */}}
-            <tr v-for="item in totalQuantiteWithDetail('{{ .iType }}', startDateSelected, endDateSelected)"
-              :class="{'table-secondary fw-bold': item.qTotal}"
-              >
-              <td :class="{'small text-muted': !item.qTotal}">[[item.ingredient]]</td>
-              <td v-if="item.recette" class="small">
-                <span class="fw-bold">[[item.recette]]</span> le [[new Date (item.dateService).toISOString().substr(0, 10)]] /
-                [[item.horaire]] <br> pour [[item.assiettes]] couverts
-                <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[item.quantite]] [[item.unit]]</span>
-              </td>
-              <td v-else></td>
-              <td class="text-end">
-                <span>[[item.qTotal]] [[item.unitTotal]]</span>
-              </td>
-              <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15" ></td>
-              <td v-show=" printAddCol ===  '2' || printAddCol ===  '3' " class="printonly print-td-15" ></td>
-            </tr>
-          </tbody>
-        </table>
-        
+            <template v-for="(item, ingredient) in totalQuantitesDPS.{{$IngTypeList}}">
+              
+              <tr v-if="showAllColIngredients && !item.qTotalX"
+                
+                >
+                <td :class="{'small text-muted': !item.qTotalX}">[[item.ingredient]]</td>
+                <td v-if="item.recette " class="small">
+                  <span class="fw-bold">[[item.recette]]</span> le [[new Date (item.dateService).toISOString().substr(0, 10)]] /
+                  [[item.horaire]] <br> pour [[item.assiettes]] couverts
+                  <span class="fw-bold float-end" v-if="item.quantite && item.unit">[[round2Decimals(item.quantite)]] [[item.unit]]</span>
+                </td>
+              </tr>
+              
+              <tr v-if="item.qTotalX"  :class="{'table-secondary': showAllColIngredients}">
+                <td>[[item.ingredient]]</td>
+                <td class="small">([[item.totalAssiettes]] couverts - [[item.totalRecettes]] plats)</td>
+              
+                <td class="text-end">
+                  <template v-for="(quantite, index) in item.qTotalX" >
+                    <span v-if="quantite.unit !== ''">[[round2Decimals(quantite.qTotal)]] [[quantite.unit]]</span>
+                    <span v-else class="small">... [[item.totalRecettes]] plats </span>
+                    <span v-if="index !== item.qTotalX.length - 1"> + </span>
+                  </template>
+                </td>
+              
+                <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15" ></td>
+                <td v-show=" printAddCol ===  '2' || printAddCol ===  '3' " class="printonly print-td-15" ></td>
+              </tr>
 
-        {{/* ::: __Table Sans Details des ingredients */}}
-        <table class="table table-bordered-bottom table-responsive table-striped print-border-1 " v-if="!showAllColIngredients">
-          <thead>
-            <tr>
-              <th>Ingredients {{$iTypeName}}</th>
-              <th class="text-end">Total</th>
-              {{/*  ajout optionnel des colonnes aux tableaux pour les impressions  */}}
-              <th class="printonly" v-show="printAddCol === '1' || printAddCol ===  '2' "></th>
-              <th class="printonly" v-show="printAddCol === '2' "></th>
-            </tr>
-          </thead>
-          <tbody>
-            {{/*  Itération sur tous les ingredients filtrés par type  */}}
-            <template v-for="(totals, ingredient) in totalQantiteInlineTx('{{ .iType }}', startDateSelected, endDateSelected)">
-              <tr>
-              <td>[[ingredient]]</td>
-              <td class="text-end print-td-mw-15">
-                <template v-for="(quantite, index) in totals" >
-                  <span v-if="quantite.unitTotal !== ''">[[Math.round(quantite.qTotal * 100 ) / 100]] [[quantite.unitTotal]]</span>
-                  <span v-else class="small">... [[quantite.qTotal]] plats ([[quantite.totalAssiettes]] couverts)</span>
-                  <span v-if="index !== totals.length - 1"> + </span>
-                </template>
-              </td>
-              <td v-show="printAddCol === '1' || printAddCol ===  '2' " class="printonly print-td-15"></td>
-              <td v-show=" printAddCol ===  '2' " class="printonly print-td-15"></td>
-            </tr>
-            </template>
+              </template>
           </tbody>
         </table>
-     
+             
 
       </div>
     </div>
@@ -980,12 +990,17 @@
 
 
 <script nonce="6GwL6l4yhLQddbSv2ftKfX9sTqEkpYcmwyUPm5LEdgqF6VP27IUA5SLae8ScqZ171xC7gGVVZAOuYPJnsiUAzPadx4yFkdQ7GNHa" type="module">
-  {{/*  ::: VueApp  */}}
+  {{/*  :::VUEAPP  */}}
   const app = new Vue ({
     delimiters: ['[[', ']]'],
     el: '#app',
     data () {
       return {
+        ExecmergeIngDatePicker: 1,
+        searchFilterExec: 1,
+        ExecfilterByDRS: 1,
+        ExecfilterByDatePicker: 1,
+
         search: '',
         selected: [], {{/* USELESS ? */}}
         datesRepas: [], // liste des dates entre 1er et dernier repas : pour les date marqué event dans le date-picker
@@ -997,13 +1012,13 @@
         endDateAllowed: null,
         startDateMenu: false,
         endDateMenu: false,
-        showAllColIngredients: false, {{/* TEST */}}
+        showAllColIngredients: false,
         {{/*  ingredientsTypesList: [{{ print $IngredientsTypesList }}],  */}}
         displayDetailsRecettes: true,
         
         
-        ingredientsRecettes: [
-          {{ range $IngredientList }}
+        ingredients: [
+          {{- range $IngredientList -}}
           {
             ingredient: "{{ .ingredient }}",
             ingredientType: "{{ .ingType }}",
@@ -1016,7 +1031,7 @@
             assiettesRecettes: {{ .assiettesRecettes }},
             assiettes: {{ .assiettes }},
           },
-          {{ end }}
+          {{- end -}}
           ],
 
               
@@ -1033,19 +1048,34 @@
           { text: "quantité", align: "end", filterable: false, value: "quantite" },
           ], 
 
-        
+          ingFraisFiltered: [],
+          totalRangeWithDetailResults: {},
 
+          ingTotalAndDetail: [],
+          ingTypeList :{
+            IngEpicesList : [],
+            IngAutresList : [],
+            IngLegumesList : [],
+            IngSucresList : [],
+            IngAnimauxList : [],
+            IngLofList : [],
+            IngSecList : [],
+            IngFraisList : [],     
+          },
         {{/*  ::: ___Print parameters  */}}
         printSelectIng: false,
         toPrint: {
           recettesSection: true,
           ingredients: true,
-          {{ range $IngredientsTypesList -}}
+          {{- range $IngredientsTypesList -}}
           {{.iType}}: true,
-          {{ end -}}
+          {{- end -}}
           {{ range $recettesList -}}
             "recetteID{{.recetteKey}}": true,
           {{ end -}}
+          LegumesRanges: true,
+          FraisRanges: true,
+          AnimauxRanges: true,
         },
 
         printAddCol: [],
@@ -1071,11 +1101,15 @@
   } {{/* return */}}    
 }, {{/* data */}}
 
+created () {
 
-{{/* ::: mounted */}}
+},
+
+{{/* :::MOUNTED */}}
 mounted () {
 
 
+  {{/*  TODO optim → hugo ?  */}}
   {{/*  ::: __date range  */}}
   datesRange: {
     // Trouver la première et la dernière date dans les données
@@ -1099,10 +1133,8 @@ mounted () {
     this.endDateSelected = this.endDate
     // Derniere date autorisée dans la sélection (ne sera pas mutable puisque dans `mounted:`)
     this.endDateAllowed = this.endDateSelected;
-
-
   };
-
+{{/*  TODO : optim : faire avec hugo  */}}
   datesRepasGen: {
     // Creer un tableau avec toutes les dateService, éliminer les doublon (Set). Défini le parametre `datesRepas` de `data()`, pour mettre en evidence les dateq où il y a des évenement dans les date-picker; TODO : est-ce encore utile maintenant que les `allowed-dates` fonctionne bien ? doublon ? Ne creer pas les date intermédiare si il y a des trou =>
     const dates = this.ingredients.map(i => {
@@ -1113,9 +1145,9 @@ mounted () {
     this.datesRepas = Array.from(new Set(dates)).sort(); 
   };
 
-  rangeDateEvents: {
+  {{/*  rangeDateEvents: {
     this.splitDateRanges(this.daysPerRange);
-  };
+  };  */}}
 
   endDateDebugGen: {
     /* Ajoute un jour a la endDateSelected, pour que les derniers jours soit bien pris en compte par le filtre opéré dans totalsIngredientFiltered.
@@ -1129,47 +1161,170 @@ mounted () {
     const datePicker = this.datePickerReset();
   };
 
+  {{/*  Listes des ingrédients filtré par types : utilisé par les filtres dates et search.  */}}
+  ingTypeListGen:  {
+    const ingredientTypes = ["Autres", "Epices", "Frais", "Legumes", "Animaux", "Sec", "Sucres", "Lof"];
+    for (const i of this.ingredients) {
+
+      if (i.unit === 'grammes') {
+        i.quantite = i.quantite / 1000 ;
+        i.unit = 'Kg';
+      }
+      else if (i.unit === 'ml') {
+        i.quantite = i.quantite / 1000 ;
+        i.unit = 'l.';
+      }
+      else if (i.unit === 'litre') {
+        i.unit = 'l.';
+      }
+
+      this.ingTypeList[`Ing${i.ingredientType}List`].push(i);
+    }
+  };
+
+  {{/*  initialise les listes d'ingrédients  par types  */}}
+
 
 }, // mounted() end
 
-{{/*  :::Computed  */}}
-
+{{/*  :::COMPUTED  */}}
 computed: { 
+  
+  {{/*  XXX : des watch sont nécessaire pour vérifier le changement des DateSelected...  */}}
 
-  {{/*  #USELESS #TODO : faire le calcul en dure avec Hugo  → au moins pour le produit en croix*/}}
-  ingredients: function () {
-    return this.ingredientsRecettes.map(ingredient => {
-      let quantite = this.roundQuantite(ingredient);
-      return {
-        ... ingredient,
-        quantite: quantite,
-      }
-    });
+
+  {{/*  :::__Total Date picker Ingredients  */}}
+  filterByDatePicker: function () {
+    const filtered = {};
+    const endDateReal = this.DateAddDays(this.endDateSelected).toISOString().slice(0, 10);
+  
+    for (const [type, ingredients] of Object.entries(this.ingTypeList)) {
+      filtered[type] = ingredients.filter(
+        ingredient => ingredient.dateService >= this.startDateSelected && ingredient.dateService <= endDateReal
+      );
+    }
+  
+    this.ExecfilterByDatePicker += 1;
+    return filtered;
   },
 
+  computeTotalObject() {
+    // Utilisé pour le tableau du total de ingredient filtré par datepicker. Renvoie les totaux des ingredients flitrés, classés par type.
+    const ingFiltered = this.filterByDatePicker;
+    let ingredientTotals = new Map();
 
-   
+    for (const [type, ingredients] of Object.entries(ingFiltered)) {
+      ingredients.forEach((i) => {
+        // Vérifier si l'élément existe dans ingredientTotals
+        if (!ingredientTotals[type]) {
+          ingredientTotals[type] = {};
+        }
+
+        let ingredientItem = ingredientTotals[type][i.ingredient];
+
+        // Vérifier si l'élément existe dans ingredientTotals[type]
+        if (!ingredientItem) {
+          ingredientItem = {
+            ingredient: i.ingredient,
+            qTotalX:[],
+            totalRecettes: 1,
+            totalAssiettes: i.assiettes,
+            iType: i.ingredientType
+          };
+
+          // Ajouter l'élément à ingredientTotals[type]
+          ingredientTotals[type][i.ingredient] = ingredientItem;
+        } else {
+          // Si l'élément existe, mettre à jour les totaux
+          ingredientItem.totalRecettes++;
+          ingredientItem.totalAssiettes += i.assiettes;
+        }
+
+        // Vérifier si l'unité est déjà présente dans qTotalX
+        const existingUnit = ingredientItem.qTotalX.find(item => item.unit === i.unit);
+
+        if (existingUnit) {
+          existingUnit.qTotal += i.quantite;
+        } else {
+          // Ajouter une nouvelle unité à qTotalX
+          ingredientItem.qTotalX.push({
+            qTotal: i.quantite,
+            unit: i.unit,
+          });
+        }
+      });
+    };
+    return ingredientTotals;
+  },
+
+  totalQuantitesDPS () {
+    const ingTotaux = this.computeTotalObject; 
+    const ingDetail = this.filterByDatePicker;
+    const mergedResult = new Map();
+    
+    for (const key in ingDetail) {
+      if (ingDetail.hasOwnProperty(key) && ingTotaux.hasOwnProperty(key)) {
+        mergedResult[key] = Object.assign({}, ingDetail[key], ingTotaux[key]);
+      }
+    }
+    // Sort the sub-objects in each Ing...List based on the ingredient value
+    for (const key in mergedResult) {
+      if (mergedResult.hasOwnProperty(key)) {
+        mergedResult[key] = Object.values(mergedResult[key]).sort((a, b) => a.ingredient.localeCompare(b.ingredient));
+      }
+    }
+
+    if (this.search.length > 2) {
+      return this.searchFilter(mergedResult);
+    } else {
+      return mergedResult;
+    }
+  },
+
   
+  splitDateRanges() {
+    let currentRange = [];
+    this.rangesDates = [];
+    const newDaysPerRange = this.daysPerRange;
+    // split dates
+    for (let i = 0; i < this.datesRepas.length; i++) {
+      currentRange.push(this.datesRepas[i]);
+      // push the current range
+      if (currentRange.length >= Number(newDaysPerRange)) {
+        this.rangesDates.push([...currentRange]);
+        currentRange = [];
+      }
+    }
+      // push the last range
+      if (currentRange.length > 0) {
+      this.rangesDates.push([...currentRange]);
+    }
+    return this.rangesDates;
+  },
+
 
 
 }, // computed end
 
-{{/*  ::: watch  */}}
+{{/*  :::WATCH  */}}
 watch: {
 
-  {{/*  USELESS → directement dans filteredIngredients avec DateAddDays  */}}
+  startDateSelected: function () {
+    this.filterByDatePicker;
+  },
+
   endDateSelected: function () {
-    /* Ajoute un jour a la endDateSelected, pour que les derniers jours soit bien pris en compte par le filtre opéré dans totalsIngredientFiltered. 
-    Meme fonction dans mounted() pour l'initialisation ! Doit etre dans watch() sinon les changement de endDateSelected ne sont pas pris en compte... */ 
-    const lastDateSelected = new Date(this.endDateSelected)
-    this.endDateSelectedDebug = new Date(lastDateSelected.setDate(lastDateSelected.getDate() + 1 )).toISOString().substr(0, 10);
-  }, 
+    this.filterByDatePicker;
+  },
 
-  
-}, 
-{{/*  watch end  */}}
+  splitDateRanges: function () {
+    this.totalRangeWithDetail;
+  }
 
-{{/*  ::: methods  */}}
+},  {{/*  watch end  */}}
+
+
+{{/*  :::METHODS  */}}
 methods: { 
 
   {{/*  ::: __print  */}}
@@ -1252,114 +1407,80 @@ methods: {
     return dateDebug;
   },
 
-  roundQuantite: function (ingredient) {
-    // Arrondir les quantité et convertir gr → Kg etc.. 
-    {{/*  TODO : faire le calcul en dure avec Hugo  */}}
-    let x = (Number(ingredient.quantite));
-    if (typeof ingredient.quantite != "number") {
-      ingredient.quantite = '-';
-    } else if (ingredient.unit == "Kg" || ingredient.unit == "litre") {
-      ingredient.quantite = Math.round(x * 100) / 100;
-    } else if (ingredient.unit == "grammes") {
-      ingredient.quantite = Math.round(x);
-      if (ingredient.quantite > 1000) {
-        ingredient.unit = "Kg"
-        ingredient.quantite = ingredient.quantite / 1000      
-      }
-    } else {
-      ingredient.quantite = Math.round(x * 100) / 100;
-    }
-    return ingredient.quantite;
-  },
+  {{/*  getFormattedQTotal(ingredient) {
+    const assiettesEtCouverts = `(${ingredient.totalRecettes} recettes)`;
 
-  {{/*  USELESS  */}}
-  convertToKg: function (quantite, unit) {
-    return quantite / 1000;
-  },
+    let value = 0;
+    let recetteNb = 0;
+    ingredient.qTotalX.forEach(item => {
+      if (item.qTotal !== 0) {
+        value += item.qTotal;
+      } 
 
-  {{/*  ::: __date split range   */}}
-  changeDateRanges(){
-    this.splitDateRanges(this.daysPerRange)
-  },
+    });
+    if ( value === 0) {
+      return assiettesEtCouverts;
+  } else {
+    
+    const qTotal = ingredient.qTotalX.map(item => `${Math.round(item.qTotal*100)/100} ${item.unit}`).join(" + ");
+    return `${qTotal}`;
+  } 
+},  */}}
 
-  splitDateRanges(newDaysPerRange) {
-    let currentRange = [];
-    this.rangesDates = [];
-    // split dates
-    for (let i = 0; i < this.datesRepas.length; i++) {
-      currentRange.push(this.datesRepas[i]);
-      // push the current range
-      if (currentRange.length >= Number(newDaysPerRange)) {
-        this.rangesDates.push([...currentRange]);
-        currentRange = [];
-      }
-    }
-      // push the last range
-      if (currentRange.length > 0) {
-      this.rangesDates.push([...currentRange]);
-    }
-  },
-
-
-
-
+  
   {{/* ::: __calculs des totaux des ingredients  */}}
 
+
+  {{/*  Totals des ingredients filtré ...  */}}
+
+  
   {{/*  tableaux des ingredients filtrés en fonction des dates séléctionné et types  */}}
-  filteredIngredients: function (iType, start, end, allo) {
-    // Récupérer la liste des ingrédients
-    let ingredients = this.ingredients
-
-    // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. 
-    end  = this.DateAddDays(end).toISOString().slice(0, 10);
-
-  
-    // Filtrer les ingrédients selon les critères spécifiés
-    const filtered = ingredients.filter(
-      (i) =>
-        i.ingredientType === iType &&
-        i.dateService >= start &&
-        i.dateService <=end &&
-        i.ingredient.toLowerCase().includes(this.search.toLowerCase())
-    );
-    {{/*  console.log("filterCalled")  */}}
-    return filtered
-  },
-
-
- {{/*  Totals des ingredients filtré ...  */}}
-
-
-  totalQantiteInlineTx(iType, start, end, allo) {
-    // renvoie un tableau sous la forme : { Ail: (2) […], Echalote: (1) […], Tomate: (1) […], "Citron jaune": (1) […] }. Permet l'affichage en une ligne des ingrédients ayant plusieurs unités non additionnables. 
-
-    const result = this.computeTotalQuantite(this.filteredIngredients(iType, start, end));
-    console.log("totalQantiteInlineTx ", allo, result);
-    return result
+ 
+  totalRange(iType, start, end) {
+    // BUG
+    const key = `${iType}_${start}_${end}`;
+    if (this.search.length > 2) {
+      return this.searchFilterRange(this.totalRangeWithDetailResults[key])
+    } else {
+      return this.totalRangeWithDetailResults[key]
+    }
   },
   
-  totalQuantiteWithDetail(iType, start, end) {
+  totalRangeWithDetail(iType, start, end) {
 
-    const totalArray = this.totalQuantite(iType, start, end);
-    const ingDetailList = this.filteredIngredients(iType, start, end);
-    console.log("ingDetail: ", ingDetailList)
+    const key = `${iType}_${start}_${end}`;
+
+    // Vérifiez si les données existent déjà
+    if (this.totalRangeWithDetailResults[key]) {
+        // Si les données existent, retournez-les directement
+        return this.totalRangeWithDetailResults[key];
+    }
+
+    const totalArray = this.totalRangeArray(iType, start, end);
+
     
-    const result = new Set([...ingDetailList, ...totalArray].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
+    const ingDetailList = this.ingFraisFiltered;
 
-    console.log("totalsAndDetail: " , iType, start, end ,   result);
+    const result = new Set([...ingDetailList, ...totalArray].sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
+    console.log("tQWD: ", result);
+
+    this.totalRangeWithDetailResults[key] = result;
+
     return result;
   },
 
-  totalQuantite(iType, start, end) {
-    // renvoie un tableau d'objets {ingredient, unitTotal, qTotal}
-    const total  = this.computeTotalQuantite(this.filteredIngredients(iType, start, end));
+  totalRangeArray(iType, start, end) {
+    // renvoie un tableau d'objets {ingredient, unitTotal, qTotal} a partir de computeTotalRange
+
+    const total  = this.computeTotalRange(this.filteredIngredientsRange(iType, start, end));
     
     const result = Object.entries(total).flatMap(([ingredient, values]) => {
-    return values.map(({ unitTotal, qTotal }) => {
+    return values.map(({ unitTotal, qTotal, totalAssiettes }) => {
       return {
         ingredient,
         unitTotal,
-        qTotal
+        qTotal: Math.round(qTotal * 100) / 100,
+        totalAssiettes
         };
       });
     });
@@ -1367,95 +1488,103 @@ methods: {
     return result;
   },
 
+  computeTotalRange(filteredIng) {
+    const totalArray = [];
 
-  computeTotalQuantite(filteredIng) {
-    const finalTotals = {};
-
-    filteredIng.forEach((item) => {
-      if (item.unit === 'grammes') {
-        item.quantite = item.quantite / 1000 ;
-        item.unit = 'Kg';
-      }
-      if (item.unit === 'ml') {
-        item.quantite = item.quantite / 1000 ;
-        item.unit = 'litre';
-      }
-      const { ingredient, quantite, unit, assiettes } = item;
+    filteredIng.forEach((item) => {     
+      item = this.convertUnit(item);
+      const { ingredient, quantite, unit, assiettes, totalRecettes } = item;
   
-      if (!finalTotals[ingredient]) {
-        finalTotals[ingredient] = [];
+      if (!totalArray[ingredient]) {
+        totalArray[ingredient] = [];
       }
-
-      finalTotals[ingredient].totalAssiettes += assiettes;
       
-      const existingItem = finalTotals[ingredient].find((item) => item.unitTotal === unit);
+      const existingItem = totalArray[ingredient].find((item) => item.unitTotal === unit);
       if (existingItem) {
         existingItem.qTotal += quantite !== 0 ? quantite : 1;
         existingItem.totalAssiettes += assiettes;
+        existingItem.totalRecettes += 1;
       } else {
-        finalTotals[ingredient].push({
+        totalArray[ingredient].push({
           unitTotal: unit,
           qTotal: quantite !== 0 ? quantite : 1,
           totalAssiettes: assiettes,
-
+          totalRecettes: 1,
         });
       }
     });
   
-    const result = {};
-  
-    Object.keys(finalTotals).forEach((ingredient) => {
-      result[ingredient] = finalTotals[ingredient].sort((a, b) => a.unitTotal.localeCompare(b.unitTotal));
-    });
-
-
-    {{/*  console.log("computeTotalQuantite : ", result)  */}}
-    return result;
+    console.log("cTQ : ", totalArray);
+    return totalArray;
   },
 
-  {{/* TODO To computed ?  */}}
-  ingredientTypeList () {
-    return [...new Set (this.ingredients.map(ingredient => ingredient.ingredientType))];
-  },
+  filteredIngredientsRange: function (iType, start, end, allo) {
+    {{/* `allo` sert au debug...  */}}
+    // Récupérer la liste des ingrédients
+    const ingredients = this.ingTypeList[`Ing${iType}List`];
 
-  {{/*  TODO pour print?__ ingredientsByRanges  */}}
-  {{/*  fraisByRangesDays() {
-    if (this.fraisByRanges  === "true") {
-    this.legumesByRanges = true;
-    this.animauxByRanges = "true";
-    }
-    else {
-      this.legumesByRanges = "false";
-      this.animauxByRanges = "false";
+    // Debug de la date (ajout d'un jour pour que la derniere date soit prise en compte) → si 'end' est définie, alors on envoie à DateAddDays, puis on reformate la date. 
+    end  = this.DateAddDays(end).toISOString().slice(0, 10);
+
+
+    // Filtrer les ingrédients selon les critères spécifiés
+ 
+      const filtered = ingredients.filter(
+        (i) =>
+          i.dateService >= start &&
+          i.dateService <=end 
+      );
     
+    this.ingFraisFiltered = filtered;
+    console.log("filtered", filtered);
+    return filtered
+  },
+
+  convertUnit(item) {
+    if (item.unit === 'grammes') {
+      item.quantite = item.quantite / 1000 ;
+      item.unit = 'Kg';
     }
-  }  */}}
+    if (item.unit === 'ml') {
+      item.quantite = item.quantite / 1000 ;
+      item.unit = 'l.';
+    }
+    return item
+  },
+  
+  round2Decimals(x) {
+    return Math.round(x * 100) / 100;
+  },
 
-{{/*  USELESS ?
-  filteredResultsCount(iType) {
-    return this.totalsIngredientFiltered(iType, 'ingredients').length;
-  },  */}}
 
-
-
-
-  {{/*  datesAllowedRange: function (val) {
-// retourne toutes les dates comprisent entre la premiere et la dernieres =>
-    for(
-      var datesAllowedArray=[],
-      date=new Date(this.startDate); 
-      date <= new Date(this.endDateAllowed); 
-      date.setDate(date.getDate()+1)){
-        datesAllowedArray.push(new Date(date).toISOString().substr(0, 10));
+  {{/* :::__ search filter  */}}
+  searchFilterRange(totalRange) {
+    const filteredSet = new Set();
+    // BUG searchRange
+    // TODO : diacritique... 
+    totalRange.forEach((item) => {
+      // Vérifier si l'élément de l'ensemble contient la chaîne de recherche
+      if (item.toString().includes(this.search)) {
+        filteredSet.add(item);
       }
+    });
+  
+    return filteredSet;
+  },
+  
+ 
+  searchFilter(merge_ing_list) {
+    // Utiliser pour les tableaux ingredients RangeDay. Cherche a l'interieur de chaque type...
+    const filtered = {};
 
-    for (var i = 0; i < datesAllowedArray.length; i++) {
-      if (datesAllowedArray[i] == val ){
-        return val
-      };
+    for (const [type, ingredients] of Object.entries(merge_ing_list)) {
+      filtered[type] = ingredients.filter(
+        ingredient => ingredient.ingredient.toLowerCase().includes(this.search.toLowerCase())
+      );
     }
-  },  */}}
-
+    this.searchFilterExec += 1;
+    return filtered;
+  },
 
 } {{/* fin de methods */}}
 }); {{/* fin New Vue */}}
@@ -1466,7 +1595,6 @@ methods: {
 
 
 
-</script>
 
 
 

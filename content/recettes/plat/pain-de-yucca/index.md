@@ -8,7 +8,7 @@ categories:
 regime:
   - vegan
   - vegetarien
-  - sans-glutten
+  - sans-gluten
 cuisson: Oui
 temperature: Chaud
 plate: 170
@@ -16,7 +16,7 @@ ingredients:
   lof:
     - title: Oeuf
       quantite: 17
-      unit: unités
+      unit: unité
     - title: Feta
       quantite: 4
       unit: Kg

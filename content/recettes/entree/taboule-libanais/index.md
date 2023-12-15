@@ -37,12 +37,7 @@ ingredients:
     - title: Semoule
       quantite: 1.2
       unit: Kg
-ingtest:
-  ingredient-sec: []
-  ingredient-animaux:
-    - title: 0 viia
-      quantite: 4
-      unit: grammes
+
 title: Taboulé libanais
 type: entree
 categories:
