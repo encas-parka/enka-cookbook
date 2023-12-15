@@ -44,7 +44,7 @@ ingredients:
   autres:
     - title: Concentré de tomate
       quantité: 2.4
-      unit: null
+
   animaux:
     - title: Agneau
       quantite: 7
@@ -55,7 +55,7 @@ ingredients:
       alergene: true
     - title: Canelle
     - title: Poivre
-      quantite: ""
+     
       commentaire: noir
     - title: Coriandre
       quantite: 8

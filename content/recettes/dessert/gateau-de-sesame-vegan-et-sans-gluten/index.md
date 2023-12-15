@@ -1,11 +1,11 @@
 ---
-title: Gateau de sésame (végan et sans-gluten)
 draft: false
-layout: recettes
+title: Gateau de sésame (végan et sans-gluten)
 description: "Gâteau au Sésame noir et chocolat "
-
+layout: recettes
 type: dessert
-categories: [Gateau]
+categories:
+  - Gateau
 auteur: Auré
 regime:
   - vegetarien
@@ -15,6 +15,7 @@ regime:
 cuisson: Oui
 temperature: Froid
 plate: 25
+check: Oui
 ingredients:
   lof:
     - title: Fécule de maïs (Maïzena)
@@ -59,5 +60,6 @@ preparation: >-
   * Laisser reposer 15 min avant de démouler à l'envers sur les plateaux. Faire chauffer la crème liquide. 
 
   * Dans un saladier, verser la crème très chaude sur les carreaux de chocolat. Enfin, glacer le gâteau!
+prepAlt: []
 publishDate: 2023-04-27T10:04:16.372Z
 ---

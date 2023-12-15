@@ -1,14 +1,10 @@
-
-  {{ $ingredientName := .title }}
-
-
   {{ if in  .alergene  .title }}
     <span class="fw-bold">{{ .title }}</span>
     {{/* TODO in-line-svg from module ? */}}
     {{ partial "inline-svg" (dict 
           "src" "fonticons/exclamation-triangle"
           "display" "inline" 
-          "title" "Alergène"
+          "title" "Allergène"
           "fs" 5
            ) }}
   {{ else }}

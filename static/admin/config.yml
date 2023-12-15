@@ -516,25 +516,7 @@ collections:
 
       ############### PrepAlt
 
-      - label: "Préparations Alternatives"
-        name: "prepAlt"
-        label_singular: "Préparation alternative"
-        widget: "list"
-        allow_add: true
-        collapsed: false
-        required: false
-        add_to_top: true
-        hint: "Si elles existent, signalez ici les recettes alternatives à celle-ci pour des régimes particuliers (végan, sans gluten, etc.); ou pour un nombres de couverts significativement différents (nécessitant des proportions d'ingrédients différents)"
-        fields:
-          - {
-              label: "recettes",
-              name: "recetteAlt",
-              widget: "relation",
-              collection: "recettes",
-              search_fields: ["title"],
-              value_field: "title",
-              display_field: "title",
-            }
+   
 
       - label: "Astuces"
         name: "astuces"
@@ -547,6 +529,26 @@ collections:
           - label: "Astuce"
             name: "astuce"
             widget: "string"
+
+      - label: "Préparations Alternatives"
+        name: "prepAlt"
+        label_singular: "Préparation alternative"
+        widget: "list"
+        allow_add: true
+        collapsed: false
+        required: false
+        add_to_top: true
+        hint: "Si elles existent, signalez ici les recettes alternatives à celle-ci pour des régimes particuliers (végan, sans gluten, etc.); ou pour un nombres de couverts significativement différents (nécessitant des proportions d'ingrédients différents). Il n'y aura pas besoin de faire la réciproque, elle se fera automatiquement."
+        fields:
+          - {
+              label: "recettes",
+              name: "recetteAlt",
+              widget: "relation",
+              collection: "recettes",
+              search_fields: ["title"],
+              value_field: "title",
+              display_field: "title",
+            }
 
       - label: "Date de publication"
         name: "publishDate"
@@ -588,7 +590,8 @@ collections:
               date_format: "DD MMMM YYYY",
               time_format: false,
               hint: "Jour ou le repas sera servis..",
-              picker_utc: false,
+              picker_utc: true, 
+              
             }
 
           - {
@@ -748,17 +751,11 @@ collections:
             name: "ingredients"
             fields:
               - { label: "Title", name: "title", widget: "string" }
-              - label: "Saisons"
-                name: "saisons"
-                hint: "...si l'ingrédient se trouvent surtout à certaines saisons"
-                widget: "select"
-                multiple: true
+              - label: "Produit Frais ?"
+                name: "pFrais"
+                hint: "...si l'ingrédient doit se conserver au frais (sert à l'élaboration des listes de course)"
+                widget: "boolean"
                 required: false
-                options:
-                  - { label: "Printemps", value: "printemps" }
-                  - { label: "Eté", value: "ete" }
-                  - { label: "Automne", value: "automne" }
-                  - { label: "Hiver", value: "hiver" }
 
               - {
                   label: "Allergènes (ou viande, porc)",
@@ -769,7 +766,6 @@ collections:
                   options:  ["Produit laitier", "Gluten", "Crustacé", "Oeuf", "Poisson", "Viande", "Porc", "Arachides", "Soja", "Fruits à coque", "Céleri", "Moutarde", "Sésame", "Sulfites", "Lupin", "Mollusque"],
                   hint: "Précisez si l'ingrédients est (ou contient) des Allergènes (gluten, produit laitier, soja, oeufs...) ou de la viande. Cela permet aussi la detection des recettes non-vegan/végétarienne ou concernées par des interdits religieux."
                 }
-
 
 
       - name: ingredients_sec
@@ -783,17 +779,7 @@ collections:
             name: "ingredients"
             fields:
               - { label: "Title", name: "title", widget: "string" }
-              - label: "Saisons"
-                name: "saisons"
-                hint: "...si l'ingrédient se trouvent surtout à certaines saisons"
-                widget: "select"
-                multiple: true
-                required: false
-                options:
-                  - { label: "Printemps", value: "printemps" }
-                  - { label: "Eté", value: "ete" }
-                  - { label: "Automne", value: "automne" }
-                  - { label: "Hiver", value: "hiver" }
+
               - {
                   label: "Alergènes",
                   name: "alergenesIng",
@@ -816,6 +802,9 @@ collections:
             name: "ingredients"
             fields:
               - { label: "Title", name: "title", widget: "string" }
+              - name: "pFrais"
+                widget: "hidden"
+                default: true
               - label: "Saisons"
                 name: "saisons"
                 hint: "...si l'ingrédient se trouvent surtout à certaines saisons"
@@ -849,6 +838,11 @@ collections:
             name: "ingredients"
             fields:
               - { label: "Title", name: "title", widget: "string" }
+              - label: "Produit Frais ?"
+                name: "pFrais"
+                hint: "...si l'ingrédient doit se conserver au frais (sert à l'élaboration des listes de course)"
+                widget: "boolean"
+                required: false
               - label: "Saisons"
                 name: "saisons"
                 hint: "...si l'ingrédient se trouvent surtout à certaines saisons"
@@ -916,6 +910,11 @@ collections:
             name: "ingredients"
             fields:
               - { label: "Title", name: "title", widget: "string" }
+              - label: "Produit Frais ?"
+                name: "pFrais"
+                hint: "...si l'ingrédient doit se conserver au frais (sert à l'élaboration des listes de course)"
+                widget: "boolean"
+                required: false
               - label: "Saisons"
                 name: "saisons"
                 hint: "...si l'ingrédient se trouvent surtout à certaines saisons"
@@ -927,6 +926,7 @@ collections:
                   - { label: "Eté", value: "ete" }
                   - { label: "Automne", value: "automne" }
                   - { label: "Hiver", value: "hiver" }
+  
               - {
                   label: "Allergènes",
                   name: "alergenesIng",

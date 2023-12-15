@@ -60,5 +60,7 @@ preparation: >-
     * Faire chauffer la crème liquide. 
     * Dans un saladier, verser la crème très chaude sur les carreaux de chocolat. 
   * Enfin, glacer les gâteaux!
+prepAlt:
+  - recetteAlt: Gateau de sésame (végan et sans-gluten)
 publishDate: 2023-04-27T09:32:43.801Z
 ---
