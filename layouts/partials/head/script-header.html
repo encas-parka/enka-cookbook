@@ -24,14 +24,11 @@
 {{- if eq .Type "recettes" -}}
 
   {{ if hugo.IsProduction }}
-
-  {{ $vuetify := resources.Get "js/vendor/vuetify.min.js" | resources.Fingerprint "sha512" }}
+    {{ $vuetify := resources.Get "js/vendor/vuetify.min.js" | resources.Fingerprint "sha512" }}
     <script src="{{- $vuetify.Permalink -}}" integrity="{{ $vuetify.Data.Integrity }}"></script>
   {{ end }}
 
   {{ if not hugo.IsProduction }}
-
-
     {{ $vuetify := resources.Get "js/vendor/vuetify.js" | resources.Fingerprint "sha512" }}
     <script src="{{- $vuetify.Permalink -}}" integrity="{{ $vuetify.Data.Integrity }}"></script>
   {{ end }}

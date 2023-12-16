@@ -30,9 +30,6 @@
     "@hyas/bootstrap": "^1.0.3",
     "flatpickr": "^4.6.13",
     "gethyas": "^2.2.1"
-    "@hyas/bootstrap": "^1.0.3",
-    "flatpickr": "^4.6.13",
-    "gethyas": "^2.2.1"
   },
   "devDependencies": {
     "decap-server": "^3.0.1",
