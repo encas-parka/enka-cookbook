@@ -1076,7 +1076,6 @@
         },
 
         printAddCol: [],
-
         {{/*  printAffiches: false,  */}}
 
         IngredientsTypesList: [{{ range $IngredientsTypesList }} {{ .iType }}, {{ end }} ],
@@ -1581,11 +1580,10 @@ methods: {
     }
     this.searchFilterExec += 1;
     return filtered;
-  },
-
-} {{/* fin de methods */}}
+    
+    
+  },} {{/* fin de methods */}}
 }); {{/* fin New Vue */}}
-
 
 </script>
 
