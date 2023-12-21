@@ -1,8 +1,7 @@
 ---
-title: " Houmous de poivrons"
 draft: false
+title: " Houmous de poivrons"
 layout: recettes
-
 type: entree
 categories:
   - Tartinade
@@ -36,7 +35,11 @@ ingredients:
       quantite: 100
       unit: grammes
     - title: Sel
+      quantite: ""
+      unit: null
     - title: Poivre
+      quantite: ""
+      unit: null
   sucres:
     - title: Jus de citron
       quantite: 0.75
